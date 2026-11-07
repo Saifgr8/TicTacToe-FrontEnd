@@ -12,15 +12,16 @@ import {
   Maximize2,
 } from "lucide-react";
 
-const MatchRules = ({ setRulesRead, valid }) => {
+const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false }) => {
   const [currentRuleIndex, setCurrentRuleIndex] = useState(0);
 
   const rules = [
     {
       icon: <Clock className="w-6 h-6 text-blue-500 dark:text-blue-300" />,
       title: "Turn Time Limit",
-      description:
-        "Players must complete their turn within 20 seconds. Failure to do so will result in a forfeited turn and potential point deduction.",
+      description: timeoutForfeit
+        ? "Players have 30 seconds per turn. If time runs out, the opponent wins."
+        : "Players must complete their turn within 20 seconds. Failure to do so will result in a forfeited turn and potential point deduction.",
     },
     {
       icon: <UserX className="w-6 h-6 text-red-500 dark:text-red-300" />,

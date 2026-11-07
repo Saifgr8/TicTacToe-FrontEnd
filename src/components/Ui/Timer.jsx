@@ -1,46 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React from "react";
 
-const CountdownTimer = ({
-  initialTime = 30,
-  onTimeUp,
-  resetSignal,
-  gameWinner,
-}) => {
-  const [timeLeft, setTimeLeft] = useState(initialTime);
-  const intervalRef = useRef(null);
-
-  // ✅ RESET timer when resetSignal changes
-  useEffect(() => {
-    setTimeLeft(initialTime);
-  }, [resetSignal, initialTime]);
-
-  useEffect(() => {
-    if (gameWinner && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, [gameWinner]);
-
-  // ✅ Restart interval on reset
-  useEffect(() => {
-    if (gameWinner) return;
-
-    if (intervalRef.current) clearInterval(intervalRef.current);
-
-    intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current);
-          onTimeUp?.();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(intervalRef.current);
-  }, [resetSignal, initialTime, onTimeUp, gameWinner]);
-
+const CountdownTimer = ({ timeLeft }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;

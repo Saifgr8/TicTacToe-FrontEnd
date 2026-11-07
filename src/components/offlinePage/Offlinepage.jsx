@@ -101,6 +101,7 @@ const Offlinepage = () => {
           <div className="flex md:flex-row flex-col justify-between items-center gap-3">
             <MatchRules
               valid={ofMatchRulesIndices}
+              timeoutForfeit
               setRulesRead={setRulesRead}
             />
             <MatchMoves setMovesRead={setMovesRead} />

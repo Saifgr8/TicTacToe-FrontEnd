@@ -12,6 +12,7 @@ const GamePlayingBoard = ({
   localName,
   player1Color,
   player2Color,
+  disabled = false,
 }) => {
   const [highlighted, setHighlighted] = useState(new Set());
 
@@ -49,7 +50,7 @@ const GamePlayingBoard = ({
 
   const handleClick = (i, j) => {
     // disable clicks after a confirmed win
-    if (isWinActive) return;
+    if (isWinActive || disabled) return;
     makeMove(i, j);
   };
 
@@ -87,7 +88,7 @@ const GamePlayingBoard = ({
           return (
             <div
               key={key}
-              className={`flex items-center justify-center border-2 border-gray-400 dark:border-gray-600 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out transform hover:scale-105 ${cellClass}`}
+              className={`flex items-center justify-center border-2 border-gray-400 dark:border-gray-600 rounded-lg shadow-sm transition-all duration-200 ease-in-out transform ${disabled || isWinActive ? "cursor-not-allowed" : "cursor-pointer hover:scale-105"} ${cellClass}`}
               style={{ fontSize: `${Math.max(52, 72 / board?.length)}px` }}
               onClick={() => handleClick(i, j)}
             >

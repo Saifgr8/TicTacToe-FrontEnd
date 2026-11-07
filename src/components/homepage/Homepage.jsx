@@ -188,7 +188,7 @@ const Homepage = () => {
                     animate={{ opacity: 1, height: "auto" }}
                     transition={{ duration: 0.4 }}
                   >
-                    <MatchRules valid={ofMatchRulesIndices} />
+                    <MatchRules valid={ofMatchRulesIndices} timeoutForfeit />
                   </motion.div>
                 )}
               </div>

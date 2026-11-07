@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PlayerScoreDisplay from "../Ui/PlayerScoreDisplay";
 import GamePlayingBoard from "../Ui/GamePlayingBoard";
@@ -11,6 +11,7 @@ import {
   emptyPatternMoveDescription,
 } from "../utils/descriptionHelper";
 import CountdownTimer from "../Ui/Timer";
+import useCountdownTimer from "../Ui/useCountdownTimer";
 import { pre } from "framer-motion/client";
 import { time } from "framer-motion";
 import { toast } from "react-toastify";
@@ -36,6 +37,41 @@ const OfflineGamePage = () => {
   const [player1Points, setPlayer1Points] = useState(0);
   const [player2Points, setPlayer2Points] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  const [timedOut, setTimedOut] = useState(false);
+  const gameOverRef = useRef(false);
+  const movePendingRef = useRef(false);
+
+  const handleTimeUp = useCallback(() => {
+    if (gameOverRef.current) return;
+
+    const activePlayer = session?.currentPlayer;
+    let winner;
+    if (
+      activePlayer &&
+      (activePlayer === player1LocalName || activePlayer === player1)
+    ) {
+      winner = player2;
+    } else if (activePlayer && activePlayer === player2) {
+      winner = player1;
+    }
+
+    if (!winner) {
+      setErrorMessage("Could not determine the winner when time ran out.");
+      return;
+    }
+
+    gameOverRef.current = true;
+    setTimedOut(true);
+    setGameWinner(winner);
+  }, [session?.currentPlayer, player1LocalName, player1, player2]);
+
+  const timeLeft = useCountdownTimer({
+    initialTime: 30,
+    resetSignal: timerKey,
+    onTimeUp: handleTimeUp,
+    gameWinner,
+    enabled: Boolean(session),
+  });
 
   //invalid mode
   //cell occuipoed
@@ -71,8 +107,7 @@ const OfflineGamePage = () => {
       player1Symbol: p1Symbol,
       player2Symbol: p2Symbol,
       startingPlayer: currentP,
-      boardSize: 6
-       ,
+      boardSize: 3,
       token,
       gameMode: player2 === "tictacbot" ? "BOTMATCH" : "PVPOFFLINE",
     })
@@ -106,7 +141,8 @@ const OfflineGamePage = () => {
   }
 
   const makeMove = async (i, j) => {
-    if (!session) return;
+    if (!session || gameOverRef.current || movePendingRef.current) return;
+    movePendingRef.current = true;
 
     const payload = {
       sessionId: session.sessionId,
@@ -120,6 +156,7 @@ const OfflineGamePage = () => {
     };
     try {
       const updatedSession = await makeMoveApi(payload);
+      if (gameOverRef.current) return;
       console.log(updatedSession);
       if (updatedSession?.error) {
         setErrorMessage(updatedSession?.message);
@@ -128,6 +165,7 @@ const OfflineGamePage = () => {
       setSession(updatedSession);
       setBoard(updatedSession?.board);
       setTurns((prev) => prev + 1);
+      setTimerKey((prev) => prev + 1);
       const shouldTwist =
         updatedSession?.twistActive === true || selectedMoveType === "TWIST";
 
@@ -143,16 +181,18 @@ const OfflineGamePage = () => {
 
       setPlayer1Points(updatedSession?.player1Points);
       setPlayer2Points(updatedSession?.player2Points);
-      if (updatedSession.winner !== null) {
+      if (updatedSession.winner != null) {
+        gameOverRef.current = true;
         setGameWinner(updatedSession?.winner);
         return;
       }
       if (updatedSession.gameStatus === "DRAW") {
         setGameDraw(true);
       }
-      setTimerKey((prev) => prev + 1);
     } catch (error) {
       console.error("Error making move:", error);
+    } finally {
+      movePendingRef.current = false;
     }
   };
 
@@ -220,7 +260,7 @@ const OfflineGamePage = () => {
                 <span className="text-gray-500 dark:text-gray-400">
                   (
                   {selectedMoveType === "TWIST"
-                    ? currentPlayerSymbol === (player1Symbol)
+                    ? currentPlayerSymbol === player1Symbol
                       ? player2Symbol
                       : player1Symbol
                     : currentPlayerSymbol}
@@ -265,7 +305,39 @@ const OfflineGamePage = () => {
               </div>
             )}
             {gameWinner && (
-              <span className="text-3xl">Winner: {gameWinner}</span>
+              <div
+                className="mt-6 flex flex-col items-center justify-center gap-2
+      rounded-2xl border border-emerald-400/30
+      bg-gradient-to-br from-emerald-500/15 via-green-500/10 to-transparent
+      px-8 py-5 shadow-lg shadow-emerald-500/10
+      animate-in fade-in zoom-in duration-500"
+                role="status"
+              >
+                <span className="text-4xl">🏆</span>
+
+                <h2
+                  className="text-2xl sm:text-3xl font-extrabold
+      tracking-wide text-emerald-400"
+                >
+                  {gameWinner} Wins!
+                </h2>
+
+                {timedOut && (
+                  <p
+                    className="mt-1 rounded-full bg-amber-500/10
+        border border-amber-400/30 px-4 py-1
+        text-sm font-medium text-amber-400"
+                  >
+                    Opponent ran out of time
+                  </p>
+                )}
+
+                {!timedOut && (
+                  <p className="text-sm text-emerald-300/70">
+                    Congratulations on your victory!
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -282,6 +354,7 @@ const OfflineGamePage = () => {
               localName={player1LocalName}
               player1Color={player1Color}
               player2Color={player2Color}
+              disabled={Boolean(gameWinner)}
             />
           </div>
         </div>
@@ -289,14 +362,7 @@ const OfflineGamePage = () => {
         {/* RIGHT — timer and moves */}
         <div className="w-full md:w-1/5 flex flex-col justify-start items-center md:items-end space-y-6">
           <div className="flex justify-center items-start w-full">
-            <CountdownTimer
-              initialTime={30}
-              resetSignal={timerKey}
-              onTimeUp={() => {
-                console.log("Time up!");
-              }}
-              gameWinner={gameWinner}
-            />
+            {session && <CountdownTimer timeLeft={timeLeft} />}
           </div>
           <div className="w-full md:w-auto">
             <GameSpecialMoves
@@ -369,7 +435,9 @@ const OfflineGamePage = () => {
               </h3>
               <p className="text-lg mt-1">
                 <span className="font-semibold text-gray-800 dark:text-gray-100">
-                  {session?.currentPlayer === player1 ? player1 : player2}
+                  {session?.currentPlayer === (player1LocalName || player1)
+                    ? player1
+                    : player2}
                 </span>{" "}
                 <span className="text-gray-500 dark:text-gray-400">
                   ({currentPlayerSymbol})
@@ -408,9 +476,44 @@ const OfflineGamePage = () => {
                 </span>
               </div>
             )}
+            {gameWinner && (
+              <div
+                className="mt-6 flex flex-col items-center justify-center gap-2
+      rounded-2xl border border-emerald-400/30
+      bg-gradient-to-br from-emerald-500/15 via-green-500/10 to-transparent
+      px-8 py-5 shadow-lg shadow-emerald-500/10
+      animate-in fade-in zoom-in duration-500"
+                role="status"
+              >
+                <span className="text-4xl">🏆</span>
+
+                <h2
+                  className="text-2xl sm:text-3xl font-extrabold
+      tracking-wide text-emerald-400"
+                >
+                  {gameWinner} Wins!
+                </h2>
+
+                {timedOut && (
+                  <p
+                    className="mt-1 rounded-full bg-amber-500/10
+        border border-amber-400/30 px-4 py-1
+        text-sm font-medium text-amber-400"
+                  >
+                    Opponent ran out of time
+                  </p>
+                )}
+
+                {!timedOut && (
+                  <p className="text-sm text-emerald-300/70">
+                    Congratulations on your victory!
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex justify-center items-start w-full">
-            <CountdownTimer resetSignal={timerKey} initialTime={30} />
+            {session && <CountdownTimer timeLeft={timeLeft} />}
           </div>
           {/* Game Board */}
           <div className="flex flex-col md:flex-row justify-center items-center w-full max-w-5xl">
@@ -419,6 +522,7 @@ const OfflineGamePage = () => {
               makeMove={makeMove}
               currentPlayer={session?.currentPlayer}
               threePatterns={session?.threePatterns}
+              disabled={Boolean(gameWinner)}
             />
           </div>
         </div>
