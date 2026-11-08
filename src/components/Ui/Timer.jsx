@@ -1,6 +1,6 @@
 import React from "react";
 
-const CountdownTimer = ({ timeLeft }) => {
+const CountdownTimer = ({ timeLeft, compact = false }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -9,16 +9,17 @@ const CountdownTimer = ({ timeLeft }) => {
 
   return (
     <div
-      className="
+      className={`
         flex flex-col items-center justify-center rounded-xl
         bg-indigo-50 px-5 py-3 dark:bg-indigo-950
-      "
+        ${compact ? "!px-3 !py-1.5 lg:!px-5 lg:!py-3" : ""}
+      `}
     >
       <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
         Timer
       </span>
       <div
-        className={`text-2xl font-bold tabular-nums ${
+        className={`text-2xl font-bold tabular-nums ${compact ? "max-lg:text-lg" : ""} ${
           timeLeft <= 5
             ? "text-red-600 motion-safe:animate-pulse"
             : "text-indigo-900 dark:text-indigo-100"

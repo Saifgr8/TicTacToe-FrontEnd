@@ -1,16 +1,25 @@
 import { getApiBaseUrl } from "../config.js";
 import { getBackendErrorMessage } from "../errors.js";
 
+const createHttpError = (message, status) => {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+};
+
 const readResponse = async (res, operation) => {
   let data;
   try {
     data = await res.json();
   } catch (error) {
-    if (!res.ok) throw new Error(`${operation} (HTTP ${res.status}).`);
+    if (!res.ok) throw createHttpError(`${operation} (HTTP ${res.status}).`, res.status);
     throw error;
   }
   if (!res.ok) {
-    throw new Error(getBackendErrorMessage(data, `${operation} (HTTP ${res.status}).`));
+    throw createHttpError(
+      getBackendErrorMessage(data, `${operation} (HTTP ${res.status}).`),
+      res.status
+    );
   }
   return data;
 };
@@ -81,9 +90,12 @@ export const getGameSessionApi = async (sessionId, token, signal, apiBaseUrl = g
       data = await res.json();
     } catch (error) {
       if (signal?.aborted) throw error;
-      throw new Error(`Could not retrieve game session (HTTP ${res.status}).`);
+      throw createHttpError(`Could not retrieve game session (HTTP ${res.status}).`, res.status);
     }
-    throw new Error(getBackendErrorMessage(data, `Could not retrieve game session (HTTP ${res.status}).`));
+    throw createHttpError(
+      getBackendErrorMessage(data, `Could not retrieve game session (HTTP ${res.status}).`),
+      res.status
+    );
   }
   return res.json();
 };

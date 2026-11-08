@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getHighlightCells, getWinCells } from "../utils/cellHelper";
+import { getRowLabel } from "../utils/boardCoordinates";
 
 const GamePlayingBoard = ({
   board,
@@ -14,13 +15,19 @@ const GamePlayingBoard = ({
   player2Color,
   disabled = false,
   highlightDuration = 500,
+  showCoordinates = false,
+  botMoveHighlight = null,
 }) => {
   const [highlighted, setHighlighted] = useState(new Set());
+  const [clickedCell, setClickedCell] = useState(null);
+  const clickHighlightTimer = useRef(null);
 
   const [isWinActive, setIsWinActive] = useState(false);
 
   const winKey = JSON.stringify(winPattern);
   const threeKey = JSON.stringify(threePatterns);
+
+  useEffect(() => () => clearTimeout(clickHighlightTimer.current), []);
 
   useEffect(() => {
     const currentWinPatterns = JSON.parse(winKey);
@@ -53,10 +60,25 @@ const GamePlayingBoard = ({
   const handleClick = (i, j) => {
     // disable clicks after a confirmed win
     if (isWinActive || disabled) return;
+    clearTimeout(clickHighlightTimer.current);
+    setClickedCell({ x: i, y: j });
+    clickHighlightTimer.current = setTimeout(() => setClickedCell(null), 500);
     makeMove(i, j);
   };
 
   return (
+    <div className={showCoordinates ? "grid grid-cols-[1.25rem_minmax(0,1fr)]" : ""}>
+    {showCoordinates && (
+      <>
+        <div aria-hidden="true" />
+        <div aria-hidden="true" className="grid gap-1 px-[9px] pb-1 text-center text-xs font-bold text-slate-600 dark:text-slate-300 sm:gap-2" style={{ gridTemplateColumns: `repeat(${board.length || 1}, minmax(0, 1fr))` }}>
+          {board.map((_, index) => <span key={index}>{index + 1}</span>)}
+        </div>
+        <div aria-hidden="true" className="grid gap-1 py-[9px] text-center text-xs font-bold text-slate-600 dark:text-slate-300 sm:gap-2" style={{ gridTemplateRows: `repeat(${board.length || 1}, minmax(0, 1fr))` }}>
+          {board.map((_, index) => <span className="flex items-center justify-center" key={index}>{getRowLabel(index)}</span>)}
+        </div>
+      </>
+    )}
     <div
       aria-label="Game board"
       className="grid gap-1 sm:gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700"
@@ -74,12 +96,17 @@ const GamePlayingBoard = ({
         row.map((cell, j) => {
           const key = `${i}-${j}`;
           const isHighlighted = highlighted.has(key);
+          const isMoveHighlighted =
+            (botMoveHighlight?.x === i && botMoveHighlight?.y === j) ||
+            (clickedCell?.x === i && clickedCell?.y === j);
 
           // Decide final class:
           // 1) If this is a confirmed win highlight (isWinActive) -> green
           // 2) Else if it's a temporary highlight (threePatterns) -> use player color logic
           // 3) Else normal/default
-          const cellClass = isHighlighted
+          const cellClass = isMoveHighlighted
+            ? "bg-gray-200 dark:bg-gray-700"
+            : isHighlighted
             ? isWinActive
               ? "bg-green-300 dark:bg-green-700"
               : currentPlayer === (localName || player1)
@@ -93,9 +120,9 @@ const GamePlayingBoard = ({
             <button
               key={key}
               type="button"
-              aria-label={`Row ${i + 1}, column ${j + 1}: ${cell || "empty"}`}
+              aria-label={`Row ${showCoordinates ? getRowLabel(i) : i + 1}, column ${j + 1}: ${cell || "empty"}`}
               disabled={disabled || isWinActive}
-              className={`min-w-0 flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-600 font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${disabled || isWinActive ? "cursor-not-allowed" : "cursor-pointer"} ${cellClass}`}
+              className={`min-w-0 flex items-center justify-center rounded-lg border font-bold transition duration-150 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${disabled || isWinActive ? "cursor-not-allowed" : "cursor-pointer"} ${cellClass} ${isMoveHighlighted ? "relative z-10 !border-blue-900 ring-2 ring-blue-900 motion-safe:scale-125 dark:!border-blue-400 dark:ring-blue-400" : "border-slate-300 dark:border-slate-600"}`}
               style={{ fontSize: `clamp(0.75rem, ${65 / board.length}cqw, 3.25rem)` }}
               onClick={() => handleClick(i, j)}
             >
@@ -104,6 +131,7 @@ const GamePlayingBoard = ({
           );
         })
       )}
+    </div>
     </div>
   );
 };

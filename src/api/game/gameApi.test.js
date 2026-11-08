@@ -44,6 +44,18 @@ test("getGameSessionApi reports unsuccessful HTTP responses", async () => {
   await assert.rejects(getGameSessionApi("game", "token"), /Session expired/);
 });
 
+test("game APIs preserve unauthorized HTTP status", async () => {
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 401,
+    json: async () => ({ message: "Full authentication is required" }),
+  });
+  const isUnauthorized = (error) => error.status === 401;
+  await assert.rejects(createGameApi({}), isUnauthorized);
+  await assert.rejects(makeMoveApi({}), isUnauthorized);
+  await assert.rejects(getGameSessionApi("game", "token"), isUnauthorized);
+});
+
 test("create and move requests surface HTTP errors", async () => {
   globalThis.fetch = async () => ({
     ok: false,

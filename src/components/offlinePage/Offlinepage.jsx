@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Flag, Sparkles } from "lucide-react";
 import Dice from "../Ui/Dice";
@@ -18,7 +18,17 @@ const Offlinepage = () => {
   const [player2Color, setPlayer2Color] = useState("");
   const [rulesRead, setRulesRead] = useState(false);
   const [movesRead, setMovesRead] = useState(false);
+  const matchSetupRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!currentPlayer) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    matchSetupRef.current?.scrollIntoView({
+      behavior: reducedMotion ? "instant" : "smooth",
+      block: "start",
+    });
+  }, [currentPlayer]);
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-[#f8f8fc] text-slate-900 dark:bg-slate-950 dark:text-white">
@@ -42,7 +52,7 @@ const Offlinepage = () => {
           />
 
           {currentPlayer && (
-            <section id="match-setup" className="mt-16 scroll-mt-6 border-t border-slate-200 pt-12 dark:border-slate-800" aria-labelledby="match-setup-title">
+            <section ref={matchSetupRef} id="match-setup" className="mt-16 scroll-mt-6 border-t border-slate-200 pt-12 dark:border-slate-800" aria-labelledby="match-setup-title">
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400"><Sparkles aria-hidden="true" className="h-4 w-4" /> Almost ready</p>
               <h2 id="match-setup-title" className="mt-2 text-3xl font-bold tracking-tight">Your match setup</h2>
               <p className="mt-3 text-slate-600 dark:text-slate-400">Meet the players, then review the rules before the match.</p>
@@ -65,15 +75,15 @@ const Offlinepage = () => {
 
               <div className="mt-10">
                 <h3 className="text-xl font-bold">Get to know the game</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Read through both guides and select Done to unlock the match.</p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Read both guides and select Done, or skip each guide to unlock the match.</p>
                 <div className="mt-5 grid items-start gap-4 lg:grid-cols-2">
                   <div>
                     <p className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-400">Match rules {rulesRead && "✓"}</p>
-                    <MatchRules valid={offlineMatchRules} timeoutForfeit setRulesRead={setRulesRead} />
+                    <MatchRules valid={offlineMatchRules} timeoutForfeit setRulesRead={setRulesRead} allowSkip />
                   </div>
                   <div>
                     <p className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-400">Special moves {movesRead && "✓"}</p>
-                    <MatchMoves setMovesRead={setMovesRead} />
+                    <MatchMoves setMovesRead={setMovesRead} allowSkip />
                   </div>
                 </div>
               </div>
@@ -83,7 +93,7 @@ const Offlinepage = () => {
                 onClick={() => navigate("/offlineGamePage")}
                 className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
               >
-                {!rulesRead || !movesRead ? "Read rules and moves to continue" : "Begin match"} <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                {!rulesRead || !movesRead ? "Complete both guides to continue" : "Begin match"} <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </button>
             </section>
           )}
