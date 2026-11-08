@@ -1,8 +1,8 @@
-import Auth from "./components/auth/auth";
+import Auth from "./components/auth/Auth";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Layout from "./layout";
+import Layout from "./Layout";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import Homepage from "./components/homepage/homepage";
+import Homepage from "./components/homepage/Homepage";
 import OnlinepvpPage from "./components/onlinePVPPage/OnlinepvpPage";
 import GameBoard from "./components/game/GameBoard";
 import Offlinepage from "./components/offlinePage/Offlinepage";

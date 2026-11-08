@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDarkMode } from "../context/UseDarkMode";
+import { useDarkMode } from "../context/useDarkMode";
 import sun from "../assets/sunAni.json";
 import moon from "../assets/moon.json";
 import Lottie from "lottie-react";

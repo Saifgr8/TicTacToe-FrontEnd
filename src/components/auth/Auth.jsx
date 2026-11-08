@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import AuthUI from "./authUI";
+import AuthUI from "./AuthUI";
 import { useForm } from "react-hook-form";
 import authServices from "../../api/axios/authAxios";
 import { useGoogleLogin } from "@react-oauth/google";
