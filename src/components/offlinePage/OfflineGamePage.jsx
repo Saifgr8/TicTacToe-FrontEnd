@@ -40,6 +40,7 @@ const OfflineGamePage = () => {
     setup.player2Symbol && setup.startingPlayer
   );
   const [session, setSession] = useState(null);
+  const [replayKey, setReplayKey] = useState(0);
   const [board, setBoard] = useState([]);
   const [selectedMoveType, setSelectedMoveType] = useState("NORMAL");
   const [selectedMovePattern, setSelectedMovePattern] = useState("NONE");
@@ -119,7 +120,7 @@ const OfflineGamePage = () => {
       else setErrorMessage(error.message || "Could not create game.");
     });
     return () => { active = false; };
-  }, [validSetup, setup, player1LocalName, player2, token]);
+  }, [validSetup, setup, player1LocalName, player2, token, replayKey]);
 
   const handleTimeUp = useCallback(() => {
     if (gameOverRef.current) return;
@@ -259,6 +260,31 @@ const OfflineGamePage = () => {
     }
   };
 
+  const handleReplay = () => {
+    clearTimeout(highlightTimerRef.current);
+    clearTimeout(reviewTimerRef.current);
+    createRequestRef.current = null;
+    gameOverRef.current = false;
+    movePendingRef.current = false;
+    botSpecialPendingRef.current = false;
+    lastBotMoveKeyRef.current = null;
+    setSession(null);
+    setBoard([]);
+    setSelectedMoveType("NORMAL");
+    setSelectedMovePattern("NONE");
+    setGameWinner(null);
+    setTimedOut(false);
+    setErrorMessage("");
+    setPollError("");
+    setAuthenticationRequired(false);
+    setBotMove(null);
+    setBotMoveHighlight(null);
+    setReviewingBotMove(false);
+    setMovePending(false);
+    setTimerKey((previous) => previous + 1);
+    setReplayKey((previous) => previous + 1);
+  };
+
   if (!validSetup) return <Navigate to="/offlinePage" replace />;
   if (authenticationRequired) return <Navigate to="/signin" replace state={{ loginRequired: true }} />;
   const disabled = Boolean(!session || gameWinner || movePending || session.botThinking || session.botError || pollError || reviewingBotMove);
@@ -300,7 +326,7 @@ const OfflineGamePage = () => {
                       <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Match complete</p>
                       <div className="mt-1 flex w-full justify-evenly gap-3">
                         <h2 className="break-words text-3xl font-black tracking-tight text-emerald-700 dark:text-emerald-300 lg:text-4xl animate-winner-bounce">{gameWinner} wins!</h2>
-                        <button type="button" onClick={() => window.location.reload()} className="min-h-11 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        <button type="button" onClick={handleReplay} className="min-h-11 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                           Replay
                         </button>
                       </div>
