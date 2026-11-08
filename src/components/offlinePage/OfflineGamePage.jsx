@@ -81,7 +81,7 @@ const OfflineGamePage = () => {
         player1Symbol: setup.player1Symbol,
         player2Symbol: setup.player2Symbol,
         startingPlayer: setup.startingPlayer,
-        boardSize: 6,
+        boardSize: 3,
         token,
         gameMode: player2 === "tictacbot" ? "BOTMATCH" : "PVPOFFLINE",
       });

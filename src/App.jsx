@@ -11,8 +11,7 @@ import RequireAuth from "./components/auth/RequireAuth";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const googleClientId =
-  "559291737253-q9k6k28hk70qke0369lfsjo27b5ufhht.apps.googleusercontent.com";
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function AppRoutes() {
   const location = useLocation();
