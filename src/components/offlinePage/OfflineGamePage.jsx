@@ -4,6 +4,7 @@ import PlayerScoreDisplay from "../Ui/PlayerScoreDisplay";
 import GamePlayingBoard from "../Ui/GamePlayingBoard";
 import GameSpecialMoves from "../Ui/GameSpecialMoves";
 import { createGameApi, getGameSessionApi, makeMoveApi } from "../../api/game/gameApi";
+import { getBackendErrorMessage } from "../../api/errors";
 import {
   moveDescriptions,
   specialMoveCost,
@@ -87,7 +88,7 @@ const OfflineGamePage = () => {
     }
     createRequestRef.current.then((data) => {
       if (!active) return;
-      if (data?.error) throw new Error(data.message || "Could not create game.");
+      if (data?.error) throw new Error(getBackendErrorMessage(data, "Could not create game."));
       if (!Array.isArray(data?.board)) throw new Error("The game server returned an invalid session.");
       setSession(data);
       setBoard(data.board);
@@ -131,7 +132,7 @@ const OfflineGamePage = () => {
       try {
         const updated = await getGameSessionApi(session.sessionId, token, controller.signal);
         if (!active || gameOverRef.current) return;
-        if (updated?.error) throw new Error(updated.message || "Could not retrieve game session.");
+        if (updated?.error) throw new Error(getBackendErrorMessage(updated, "Could not retrieve game session."));
         if (!Array.isArray(updated?.board) || typeof updated.botThinking !== "boolean") {
           throw new Error("The game server returned an invalid session.");
         }
@@ -139,7 +140,7 @@ const OfflineGamePage = () => {
         setBoard((previous) => JSON.stringify(previous) === JSON.stringify(updated.board) ? previous : updated.board);
         if (updated.lastMove && updated.lastMovePlayer === player2) setBotMove(updated.lastMove);
         if (updated.botError) {
-          setPollError(`Bot error: ${updated.botError}`);
+          setPollError(`Bot error: ${getBackendErrorMessage({ message: updated.botError }, "Could not make a bot move.")}`);
           return;
         }
         if (updated.winner != null) {
@@ -193,7 +194,7 @@ const OfflineGamePage = () => {
         token,
       });
       if (!mountedRef.current || gameOverRef.current) return;
-      if (updated?.error) throw new Error(updated.message || "Could not make move.");
+      if (updated?.error) throw new Error(getBackendErrorMessage(updated, "Could not make move."));
       if (!Array.isArray(updated?.board)) throw new Error("The game server returned an invalid session.");
       setSession(updated);
       setBoard(updated.board);
@@ -214,7 +215,7 @@ const OfflineGamePage = () => {
   if (!validSetup) return <Navigate to="/offlinePage" replace />;
   const disabled = Boolean(!session || gameWinner || movePending || session.botThinking || session.botError || pollError);
   const botStatus = session?.botError
-    ? `Bot error: ${session.botError}`
+    ? `Bot error: ${getBackendErrorMessage({ message: session.botError }, "Could not make a bot move.")}`
     : pollError
     ? `Bot update failed: ${pollError}`
     : session?.botThinking

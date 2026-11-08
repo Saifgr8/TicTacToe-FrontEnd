@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getApiBaseUrl } from "../config";
+import { getRequestErrorMessage } from "../errors";
 
 const authServices = {
   register: async (data) => {
@@ -11,18 +12,7 @@ const authServices = {
       });
       return response.data;
     } catch (error) {
-      if (error.response) {
-        const backendError = error.response.data;
-        const message =
-          backendError?.message || "Registration failed. Please try again.";
-        throw new Error(message);
-      } else if (error.request) {
-        throw new Error(
-          "Network error. Please check your internet connection."
-        );
-      } else {
-        throw new Error("Unexpected error occurred: " + error.message);
-      }
+      throw new Error(getRequestErrorMessage(error, "Registration failed. Please try again."));
     }
   },
   login: async (data) => {
@@ -38,18 +28,7 @@ const authServices = {
         return response.data;
       } else throw new Error("Empty JWT found");
     } catch (error) {
-      if (error.response) {
-        const backendError = error.response.data;
-        const message =
-          backendError?.message || "Login failed. Please try again.";
-        throw new Error(message);
-      } else if (error.request) {
-        throw new Error(
-          "Network error. Please check your internet connection."
-        );
-      } else {
-        throw new Error("Unexpected error occurred: " + error.message);
-      }
+      throw new Error(getRequestErrorMessage(error, "Login failed. Please try again."));
     }
   },
   googleLoginSucess: async (token) => {
@@ -71,19 +50,7 @@ const authServices = {
         return response.data;
       } else throw new Error("Empty JWT found");
     } catch (error) {
-      if (error.response) {
-        throw new Error(
-          error.response.message ||
-            "Error sending Google token to backend or processing backend response: " +
-              error
-        );
-      } else if (error.request) {
-        throw new Error(
-          "Network error. Please check your internet connection."
-        );
-      } else {
-        throw new Error("Unexpected error occurred: " + error.message);
-      }
+      throw new Error(getRequestErrorMessage(error, "Google sign-in failed. Please try again."));
     }
   },
   handleGoogleLoginError: async (googleErrors) => {

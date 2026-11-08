@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from "../config.js";
+import { getBackendErrorMessage } from "../errors.js";
 
 const readResponse = async (res, operation) => {
   let data;
@@ -9,7 +10,7 @@ const readResponse = async (res, operation) => {
     throw error;
   }
   if (!res.ok) {
-    throw new Error(data?.message || `${operation} (HTTP ${res.status}).`);
+    throw new Error(getBackendErrorMessage(data, `${operation} (HTTP ${res.status}).`));
   }
   return data;
 };
@@ -75,7 +76,14 @@ export const getGameSessionApi = async (sessionId, token, signal, apiBaseUrl = g
     }
   );
   if (!res.ok) {
-    throw new Error(`Could not retrieve game session (HTTP ${res.status}).`);
+    let data;
+    try {
+      data = await res.json();
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      throw new Error(`Could not retrieve game session (HTTP ${res.status}).`);
+    }
+    throw new Error(getBackendErrorMessage(data, `Could not retrieve game session (HTTP ${res.status}).`));
   }
   return res.json();
 };

@@ -36,6 +36,12 @@ test("getGameSessionApi sends the session ID, authorization, and abort signal", 
 test("getGameSessionApi reports unsuccessful HTTP responses", async () => {
   globalThis.fetch = async () => ({ ok: false, status: 503 });
   await assert.rejects(getGameSessionApi("game", "token"), /HTTP 503/);
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 400,
+    json: async () => ({ message: { session: "Session expired" } }),
+  });
+  await assert.rejects(getGameSessionApi("game", "token"), /Session expired/);
 });
 
 test("create and move requests surface HTTP errors", async () => {
@@ -46,6 +52,12 @@ test("create and move requests surface HTTP errors", async () => {
   });
   await assert.rejects(createGameApi({}), /Invalid move/);
   await assert.rejects(makeMoveApi({}), /Invalid move/);
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 400,
+    json: async () => ({ message: { symbol: "Invalid symbol", move: "Invalid move" } }),
+  });
+  await assert.rejects(makeMoveApi({}), /Invalid symbol; Invalid move/);
   globalThis.fetch = async () => ({
     ok: false,
     status: 503,
