@@ -1,5 +1,17 @@
 # React + Vite
 
+## Backend configuration
+
+Set `VITE_API_URL` to the backend's absolute HTTP(S) API URL ending in `/api`,
+for example `http://localhost:8080/api`. A trailing slash is optional.
+All REST calls use this URL; the SockJS endpoint is derived from the same
+backend path by replacing `/api` with `/gameplay`.
+
+For Vercel, set `VITE_API_URL` in the project environment variables for each
+deployment environment and redeploy. Vite embeds `VITE_` variables in the
+frontend build, so never put secrets in them. The backend must separately allow
+the frontend origin through CORS (and its SockJS origin configuration).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

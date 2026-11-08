@@ -1,10 +1,11 @@
 import axios from "axios";
+import { getApiBaseUrl } from "../config";
 
 const gameServices = {
   sendInvite: async (jwt , opponent) => {
     try {
       await axios.post(
-        "http://localhost:8080/api/invite",
+        `${getApiBaseUrl()}/invite`,
         {
           from: localStorage.getItem("username"),
           to: opponent,

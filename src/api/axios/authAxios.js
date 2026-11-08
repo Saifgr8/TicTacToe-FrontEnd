@@ -1,11 +1,10 @@
 import axios from "axios";
-
-export const API_BASE_URL = "http://localhost:8080/api";
+import { getApiBaseUrl } from "../config";
 
 const authServices = {
   register: async (data) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/register`, data, {
+      const response = await axios.post(`${getApiBaseUrl()}/auth/register`, data, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -28,7 +27,7 @@ const authServices = {
   },
   login: async (data) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, data, {
+      const response = await axios.post(`${getApiBaseUrl()}/auth/login`, data, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -56,7 +55,7 @@ const authServices = {
   googleLoginSucess: async (token) => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/auth/google/callback`,
+        `${getApiBaseUrl()}/auth/google/callback`,
         {
           googleAccessToken: token.access_token,
         },

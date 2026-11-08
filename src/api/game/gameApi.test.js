@@ -1,6 +1,16 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { createGameApi, getGameSessionApi, makeMoveApi } from "./gameApi.js";
+import {
+  createGameApi as createGameWithBase,
+  getGameSessionApi as getSessionWithBase,
+  makeMoveApi as makeMoveWithBase,
+} from "./gameApi.js";
+
+const apiBaseUrl = "https://example.test/api";
+const createGameApi = (data) => createGameWithBase(data, apiBaseUrl);
+const makeMoveApi = (data) => makeMoveWithBase(data, apiBaseUrl);
+const getGameSessionApi = (sessionId, token, signal) =>
+  getSessionWithBase(sessionId, token, signal, apiBaseUrl);
 
 const originalFetch = globalThis.fetch;
 afterEach(() => {
@@ -11,7 +21,7 @@ test("getGameSessionApi sends the session ID, authorization, and abort signal", 
   const controller = new AbortController();
   const session = { sessionId: "game/1", botThinking: true };
   globalThis.fetch = async (url, options) => {
-    assert.equal(url, "http://localhost:8080/api/match/session/game%2F1");
+    assert.equal(url, `${apiBaseUrl}/match/session/game%2F1`);
     assert.equal(options.headers.Authorization, "Bearer test-token");
     assert.equal(options.signal, controller.signal);
     return { ok: true, json: async () => session };
@@ -66,6 +76,8 @@ test("create and move requests preserve successful session responses", async () 
     sessionId: "game", x: 0, y: 0, symbol: "X", moveType: "TWIST",
     patternType: "NONE", board: [[null]], token: "token",
   }), session);
+  assert.equal(requests[0].url, `${apiBaseUrl}/match/create`);
+  assert.equal(requests[1].url, `${apiBaseUrl}/match/move`);
   assert.equal(requests[0].options.headers.Authorization, "token");
   assert.equal(JSON.parse(requests[0].options.body).gameMode, "PVPOFFLINE");
   assert.equal(JSON.parse(requests[1].options.body).symbol, "X");

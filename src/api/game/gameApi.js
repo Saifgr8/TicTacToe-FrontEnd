@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from "../config.js";
+
 const readResponse = async (res, operation) => {
   let data;
   try {
@@ -12,7 +14,7 @@ const readResponse = async (res, operation) => {
   return data;
 };
 
-export const createGameApi = async (data) => {
+export const createGameApi = async (data, apiBaseUrl = getApiBaseUrl()) => {
   const {
     player1Username,
     player2Username,
@@ -32,7 +34,7 @@ export const createGameApi = async (data) => {
     boardSize,
     gameMode,
   };
-  const res = await fetch("http://localhost:8080/api/match/create", {
+  const res = await fetch(`${apiBaseUrl}/match/create`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -42,7 +44,7 @@ export const createGameApi = async (data) => {
   });
   return readResponse(res, "Could not create game");
 };
-export const makeMoveApi = async (data) => {
+export const makeMoveApi = async (data, apiBaseUrl = getApiBaseUrl()) => {
   const { sessionId, x, y, symbol, moveType, patternType, board, token } = data;
   const payload = {
     sessionId,
@@ -53,7 +55,7 @@ export const makeMoveApi = async (data) => {
     patternType: patternType || "NONE",
     board,
   };
-  const res = await fetch("http://localhost:8080/api/match/move", {
+  const res = await fetch(`${apiBaseUrl}/match/move`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -64,9 +66,9 @@ export const makeMoveApi = async (data) => {
   return readResponse(res, "Could not make move");
 };
 
-export const getGameSessionApi = async (sessionId, token, signal) => {
+export const getGameSessionApi = async (sessionId, token, signal, apiBaseUrl = getApiBaseUrl()) => {
   const res = await fetch(
-    `http://localhost:8080/api/match/session/${encodeURIComponent(sessionId)}`,
+    `${apiBaseUrl}/match/session/${encodeURIComponent(sessionId)}`,
     {
       headers: { Authorization: `${token}` },
       signal,

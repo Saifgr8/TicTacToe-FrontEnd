@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import SockJS from "sockjs-client/dist/sockjs";
 import { Client } from "@stomp/stompjs";
+import { getGameplayUrl } from "../../api/config";
 
 // Lucide React Icons for RPS
 import { BrickWall, ScrollText, Scissors } from "lucide-react";
@@ -58,7 +59,7 @@ const RockPaperScissor = ({
     }
 
     const socket = new SockJS(
-      `http://localhost:8080/gameplay?username=${encodeURIComponent(username)}`
+      getGameplayUrl(username)
     ); // Connect to your game WebSocket endpoint
     const client = new Client({
       webSocketFactory: () => socket,

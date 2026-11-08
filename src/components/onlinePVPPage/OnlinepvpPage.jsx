@@ -6,6 +6,7 @@ import MatchMoves from "../Ui/MatchMoves";
 import gameServices from "../../api/game/gameServices";
 import SockJS from "sockjs-client/dist/sockjs";
 import { Client } from "@stomp/stompjs";
+import { getGameplayUrl } from "../../api/config";
 
 const OnlinepvpPage = () => {
   const location = useLocation();
@@ -63,7 +64,7 @@ const OnlinepvpPage = () => {
     }
 
     const socket = new SockJS(
-      `http://localhost:8080/gameplay?username=${encodeURIComponent(username)}`
+      getGameplayUrl(username)
     );
     const client = new Client({
       webSocketFactory: () => socket,

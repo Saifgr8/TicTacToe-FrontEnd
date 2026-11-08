@@ -1,11 +1,11 @@
 import axios from "axios";
-import { API_BASE_URL } from "../axios/authAxios";
+import { getApiBaseUrl } from "../config";
 
 const playerServices = {
   getPlayer: async (username, jwt) => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/auth/player/${username}`,
+        `${getApiBaseUrl()}/auth/player/${username}`,
         {
           headers: {
             "Content-Type": "application/json",

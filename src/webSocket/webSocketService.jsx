@@ -7,6 +7,7 @@ import PlayerScoreDisplay from "../components/Ui/PlayerScoreDisplay";
 import { useLocation, useNavigate } from "react-router-dom";
 import { specialMoveCost as sharedSpecialMoveCost } from "../components/utils/descriptionHelper";
 import { getCurrentPlayerSymbol } from "../components/utils/sessionSymbols";
+import { getGameplayUrl } from "../api/config";
 
 const WebSocketGameBoard = ({
   player1Username,
@@ -180,7 +181,7 @@ const WebSocketGameBoard = ({
     }
 
     const socket = new SockJS(
-      `http://localhost:8080/gameplay?username=${encodeURIComponent(username)}`
+      getGameplayUrl(username)
     );
 
     const client = new Client({
