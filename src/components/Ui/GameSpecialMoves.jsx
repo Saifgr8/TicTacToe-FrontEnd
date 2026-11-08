@@ -1,4 +1,5 @@
 import React from "react";
+import { availableMoveTypes, canSelectMove } from "../utils/moveSelection";
 
 const GameSpecialMoves = ({
   currentPlayerPoints,
@@ -34,16 +35,8 @@ const GameSpecialMoves = ({
 
       {/* Move Type Buttons */}
       <div className={`flex flex-wrap justify-center gap-4 mb-6 ${compact ? "lg:justify-start lg:gap-2 lg:mb-3" : ""}`}>
-        {[
-          "NORMAL",
-          "TWIST",
-          "PATTERN_BOMB",
-          "OVERRIDE",
-          "DOUBLE_OVERRIDE",
-        ].map((type) => {
-          const affordable =
-            !disabled && currentPlayerPoints >= specialMoveCost.get(type) &&
-            !(type === "TWIST" && isTwistActive);
+        {availableMoveTypes.map((type) => {
+          const affordable = canSelectMove(type, currentPlayerPoints, specialMoveCost, isTwistActive, disabled);
 
           const isSelected = selectedMoveType === type;
 
@@ -59,13 +52,13 @@ const GameSpecialMoves = ({
                 px-4 py-2 rounded-xl font-semibold text-sm transition ${compact ? "lg:px-3 lg:py-1.5" : ""}
                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600
                 ${
-                  affordable
-                    ? `bg-gradient-to-r ${
-                        isSelected
-                          ? "from-indigo-600 to-indigo-700"
-                          : "from-slate-600 to-slate-700"
-                      } text-white`
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+                  !affordable
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+                    : type !== "NORMAL"
+                      ? `bg-green-100 text-green-900 hover:bg-green-200 dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800 ${isSelected ? "ring-2 ring-indigo-600 ring-offset-2 dark:ring-indigo-400 dark:ring-offset-slate-900" : ""}`
+                      : isSelected
+                        ? "bg-indigo-700 text-white"
+                        : "bg-slate-600 text-white hover:bg-slate-700"
                 }
               `}
             >

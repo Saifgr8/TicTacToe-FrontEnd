@@ -10,9 +10,10 @@ import {
   SwitchCamera,
 } from "lucide-react";
 
-const MatchMoves = ({ setMovesRead }) => {
+const MatchMoves = ({ setMovesRead, allowSkip = false }) => {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [furthestMoveIndex, setFurthestMoveIndex] = useState(0);
+  const [skipped, setSkipped] = useState(false);
 
   const moves = [
     {
@@ -127,7 +128,20 @@ const MatchMoves = ({ setMovesRead }) => {
             </button>
           )}
         </div>
-        <GuideProgress label="Special moves" viewed={furthestMoveIndex + 1} total={moves.length} />
+        <GuideProgress label="Special moves" viewed={furthestMoveIndex + 1} total={moves.length} skipped={skipped} />
+        {allowSkip && !skipped && (
+          <button
+            type="button"
+            className="mt-4 min-h-11 rounded-lg px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-indigo-300 dark:hover:bg-indigo-950"
+            onClick={() => {
+              setSkipped(true);
+              setCurrentMoveIndex(0);
+              setMovesRead(true);
+            }}
+          >
+            Skip special moves
+          </button>
+        )}
       </div>
     </div>
   );

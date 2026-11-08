@@ -13,9 +13,10 @@ import {
   Maximize2,
 } from "lucide-react";
 
-const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false }) => {
+const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false, allowSkip = false }) => {
   const [currentRuleIndex, setCurrentRuleIndex] = useState(0);
   const [furthestRuleIndex, setFurthestRuleIndex] = useState(0);
+  const [skipped, setSkipped] = useState(false);
 
   const rules = [
     {
@@ -149,7 +150,20 @@ const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false }) => {
             </button>
           )}
         </div>
-        <GuideProgress label="Match rules" viewed={furthestRuleIndex + 1} total={validRules.length} />
+        <GuideProgress label="Match rules" viewed={furthestRuleIndex + 1} total={validRules.length} skipped={skipped} />
+        {allowSkip && !skipped && (
+          <button
+            type="button"
+            className="mt-4 min-h-11 rounded-lg px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-indigo-300 dark:hover:bg-indigo-950"
+            onClick={() => {
+              setSkipped(true);
+              setCurrentRuleIndex(0);
+              setRulesRead(true);
+            }}
+          >
+            Skip match rules
+          </button>
+        )}
       </div>
     </div>
   );

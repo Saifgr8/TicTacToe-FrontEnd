@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@keyframes winner-entrance {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .transform-style-preserve-3d {
   transform-style: preserve-3d;
 }
@@ -38,4 +43,18 @@
 }
 .animate-scaleIn {
   animation: scaleIn 0.25s ease-out;
+}
+@keyframes winner-bounce {
+  0%, 100% {
+    transform: translateY(-15%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-winner-bounce {
+  animation: winner-bounce 1s infinite;
 }

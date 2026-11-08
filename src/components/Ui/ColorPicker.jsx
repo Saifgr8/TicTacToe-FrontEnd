@@ -39,13 +39,19 @@ const ColorPicker = ({
     <div className="flex flex-col gap-4 items-center">
       <div className="grid w-full grid-cols-2 gap-3" aria-label="Player color previews">
         {players.map(({ name, color, number }) => {
-          const previewColor = !color && turn === number ? selectedColor : color;
+          const isActive = turn === number && !color;
+          const previewColor = isActive ? selectedColor : color;
           const colorName = colors.find((item) => item.className === previewColor)?.id;
           const status = color ? "Confirmed" : previewColor ? "Preview" : "Not selected";
 
           return (
-            <div key={number} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+            <div key={number} className={`min-w-0 rounded-xl border p-3 transition-colors ${
+              isActive
+                ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500/30 dark:border-indigo-400 dark:bg-indigo-950 dark:ring-indigo-400/40"
+                : "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
+            }`}>
               <p className="truncate text-sm font-semibold" title={name}>{name}</p>
+              {isActive && <p className="mt-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">Choosing now</p>}
               <div className="mt-2 flex items-center gap-2">
                 <span
                   aria-hidden="true"

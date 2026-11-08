@@ -6,7 +6,7 @@ import DarkModeToggler from "./DarkModeToggler";
 const Navbar = () => (
   <nav
     className=" bg-gradient-to-r from-yellow-400 via-blue-700 to-blue-950  /* Light mode gradient */
-  dark:bg-gradient-to-r dark:from-blue-950 dark:via-blue-600 dark:to-yellow-200 /* Dark mode gradient */
+  dark:bg-gradient-to-r dark:from-slate-950 dark:via-blue-600 dark:to-yellow-200 /* Dark mode gradient */
   text-white p-4 relative z-50" 
   >
     <ul className="flex space-x-4">
