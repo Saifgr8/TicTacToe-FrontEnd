@@ -221,7 +221,7 @@ tic_tac_twist/
 - **Special Moves**:
   - NORMAL (0 pts)
   - PATTERN_BOMB (2 pts) + pattern selection
-  - TWIST (3 pts)
+  - TWIST (1 pt)
   - OVERRIDE (4 pts)
   - DOUBLE_OVERRIDE (5 pts)
 
@@ -471,7 +471,7 @@ Component re-renders with new state
 | PATTERN_BOMB | 2 | Clear entire row/column/diagonal | 1 turn |
 | OVERRIDE | 4 | Replace 1 opponent symbol | 1 turn |
 | DOUBLE_OVERRIDE | 5 | Replace 2 opponent symbols | 2 turns (special duration) |
-| TWIST | 3 | Exchange symbols with opponent | 2 turns |
+| TWIST | 1 | Exchange symbols with opponent | 2 turns |
 
 ### Move Patterns (for PATTERN_BOMB)
 - ROW: Clear entire row
@@ -688,4 +688,3 @@ Component re-renders with new state
    - Dark mode compatibility
    - Error scenarios (network, invalid moves)
    - WebSocket connection recovery (for online features)
-

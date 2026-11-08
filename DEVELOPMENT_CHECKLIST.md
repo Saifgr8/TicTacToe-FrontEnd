@@ -77,7 +77,7 @@
 | **NORMAL Move** | ✅ Complete | 0 points, standard play |
 | **EMPTY_CELL** | ✅ Complete | 2 points, remove opponent |
 | **PATTERN_BOMB** | ✅ Complete | 2 points, clear row/column/diagonal |
-| **TWIST** | ✅ Complete | 3 points, swap symbols 2 turns |
+| **TWIST** | ✅ Complete | 1 point, swap symbols 2 turns |
 | **OVERRIDE** | ✅ Complete | 4 points, replace 1 opponent |
 | **DOUBLE_OVERRIDE** | ✅ Complete | 5 points, replace 2 opponents |
 | **Timer** | ✅ Complete | 30-second turn limit |
@@ -412,4 +412,3 @@ Navigate to HomePage
 **Last Updated**: 2026-11-07  
 **Analysis Scope**: Complete frontend codebase  
 **Status**: ✅ COMPLETE
-
