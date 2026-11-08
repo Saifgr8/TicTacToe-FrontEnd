@@ -10,22 +10,17 @@ const CountdownTimer = ({ timeLeft }) => {
   return (
     <div
       className="
-        flex flex-col items-center justify-center
-        bg-gradient-to-br from-indigo-100 via-white to-indigo-200
-        dark:from-gray-800 dark:via-gray-900 dark:to-black
-        text-gray-900 dark:text-gray-100
-        rounded-2xl shadow-md border border-gray-300 dark:border-gray-700
-        w-32 h-32 sm:w-40 sm:h-40
-        transition-all duration-300
+        flex flex-col items-center justify-center rounded-xl
+        bg-indigo-50 px-5 py-3 dark:bg-indigo-950
       "
     >
-      <span className="text-lg font-medium text-indigo-700 dark:text-indigo-300 mb-2">
-        ⏳ Timer
+      <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+        Timer
       </span>
       <div
-        className={`text-3xl sm:text-4xl font-bold ${
+        className={`text-2xl font-bold tabular-nums ${
           timeLeft <= 5
-            ? "text-red-600 animate-pulse"
+            ? "text-red-600 motion-safe:animate-pulse"
             : "text-indigo-900 dark:text-indigo-100"
         }`}
       >

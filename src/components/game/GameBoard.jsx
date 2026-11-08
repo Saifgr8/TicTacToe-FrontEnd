@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import WebSocketGameBoard from "../../webSocket/webSocketService";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import RockPaperScissor from "../Ui/RockPaperScissor";
 const GameBoard = () => {
   const [currentPlayer, setCurrentPlayer] = useState("");
@@ -11,21 +11,10 @@ const GameBoard = () => {
   const [currentPlayerSymbol, setCurrentPlayerSymbol] = useState("");
 
   const location = useLocation();
-  const navigate = useNavigate();
-
   if (!location.state) {
-    navigate("/onlinePVPPage");
-    return <p>Redirecting...</p>;
+    return <Navigate to="/onlinePVPPage" replace />;
   }
   const { player1Username, player2Username } = location.state;
-  // Clear and grouped logs for debugging
-  console.log("=== GameBoard State ===");
-  console.log("Current Player:", currentPlayer);
-  console.log("Player 1 Username:", player1);
-  console.log("Player 2 Username:", player2);
-  console.log("Player 1 Symbol:", player1Symbol);
-  console.log("Player 2 Symbol:", player2Symbol);
-  console.log("========================");
   return (
     <div>
       {!player1Symbol && !player2Symbol && (

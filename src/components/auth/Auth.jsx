@@ -3,7 +3,7 @@ import AuthUI from "./authUI";
 import { useForm } from "react-hook-form";
 import authServices from "../../api/axios/authAxios";
 import { useGoogleLogin } from "@react-oauth/google";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Auth = () => {
   const [formErrors, setFormErrors] = useState("");
@@ -15,6 +15,7 @@ const Auth = () => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
+  const location = useLocation();
 
   //SIGN IN
   const signIn = async (data) => {
@@ -86,6 +87,7 @@ const Auth = () => {
           errors={errors}
           watch={watch}
           formErrors={formErrors}
+          loginRequired={location.state?.loginRequired === true}
           isFlipped={isFlipped}
           setIsFlipped={setIsFlipped}
           googleLogin={googleLogin}

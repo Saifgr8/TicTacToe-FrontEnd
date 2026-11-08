@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import GuideProgress from "./GuideProgress";
 import {
   Clock,
   UserX,
@@ -14,6 +15,7 @@ import {
 
 const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false }) => {
   const [currentRuleIndex, setCurrentRuleIndex] = useState(0);
+  const [furthestRuleIndex, setFurthestRuleIndex] = useState(0);
 
   const rules = [
     {
@@ -39,7 +41,7 @@ const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false }) => {
       icon: <Zap className="w-6 h-6 text-purple-500 dark:text-purple-300" />,
       title: "Strategic Special Moves",
       description:
-        "Unlock and utilize powerful special moves costing between 3 to 5 points. These moves offer unique strategic advantages to turn the tide.",
+        "Unlock and utilize powerful special moves costing between 1 and 5 points. These moves offer unique strategic advantages to turn the tide.",
     },
     {
       icon: (
@@ -127,7 +129,11 @@ const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false }) => {
           {currentRuleIndex < validRules.length - 1 ? (
             <button
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition-all duration-200"
-              onClick={() => setCurrentRuleIndex((prev) => prev + 1)}
+              onClick={() => {
+                const nextIndex = currentRuleIndex + 1;
+                setCurrentRuleIndex(nextIndex);
+                setFurthestRuleIndex((prev) => Math.max(prev, nextIndex));
+              }}
             >
               Next ➡
             </button>
@@ -143,6 +149,7 @@ const MatchRules = ({ setRulesRead, valid, timeoutForfeit = false }) => {
             </button>
           )}
         </div>
+        <GuideProgress label="Match rules" viewed={furthestRuleIndex + 1} total={validRules.length} />
       </div>
     </div>
   );

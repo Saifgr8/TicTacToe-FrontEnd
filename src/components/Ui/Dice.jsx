@@ -1,18 +1,15 @@
-import React from "react";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { colors } from "../utils/colors";
+import { useEffect, useRef, useState } from "react";
+import { motion as Motion, useReducedMotion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ArrowRight, Dices, Sparkles, Trophy, Users, X } from "lucide-react";
 import ColorPicker from "./ColorPicker";
-import { tr } from "framer-motion/client";
 
 const Dice = ({
   player1,
   setPlayer1,
   player2,
   setPlayer2,
-  player1Symbol,
   setPlayer1Symbol,
-  player2Symbol,
   setPlayer2Symbol,
   currentPlayer,
   setCurrentPlayer,
@@ -23,48 +20,33 @@ const Dice = ({
 }) => {
   const [rolling, setRolling] = useState(false);
   const [roll, setRoll] = useState(null);
-  const [result, setResult] = useState("");
   const [winner, setWinner] = useState(null);
-  const mode = localStorage.getItem("mode");
   const [open, setOpen] = useState(true);
   const [nameReady, setNameReady] = useState(false);
   const [symbolModal, setSymbolModal] = useState(false);
-  const [playerColor, setPlayerColor] = useState("");
+  const timers = useRef([]);
+  const reduceMotion = useReducedMotion();
+  const mode = localStorage.getItem("mode");
+  const username = localStorage.getItem("username");
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const rollDice = () => {
-    console.log("clicked");
-    if (rolling) return;
+    if (rolling || winner) return;
     setRolling(true);
-    setResult("");
-
-    // Simulate dice spin
-    let randomValue = Math.floor(Math.random() * 20) + 1;
-
-    setTimeout(() => {
+    const randomValue = Math.floor(Math.random() * 6) + 1;
+    timers.current.push(setTimeout(() => {
       setRolling(false);
       setRoll(randomValue);
-      const res = randomValue < 10 ? "❌ You Lost!" : "✅ You Won!";
-      setResult(res);
-
-      // Determine winner
-      const winnerName = randomValue < 10 ? player2 : player1;
-      setWinner(winnerName);
-
-      // Open symbol modal after 1.5 sec
-      setTimeout(() => setSymbolModal(true), 1500);
-    }, 1500);
+      setWinner(randomValue <= 3 ? player2 : player1);
+      timers.current.push(setTimeout(() => setSymbolModal(true), 1500));
+    }, 1500));
   };
 
   const handleSymbolChoice = (symbol) => {
-    let p1Symbol, p2Symbol;
-
-    if (winner === player1) {
-      p1Symbol = symbol;
-      p2Symbol = symbol === "X" ? "0" : "X";
-    } else {
-      p2Symbol = symbol;
-      p1Symbol = symbol === "X" ? "0" : "X";
-    }
+    const otherSymbol = symbol === "X" ? "O" : "X";
+    const p1Symbol = winner === player1 ? symbol : otherSymbol;
+    const p2Symbol = winner === player1 ? otherSymbol : symbol;
 
     setPlayer1Symbol(p1Symbol);
     setPlayer2Symbol(p2Symbol);
@@ -90,250 +72,188 @@ const Dice = ({
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [symbolModal, winner]);
+  }, [symbolModal, winner, player2, setCurrentPlayer, setPlayer1Symbol, setPlayer2Symbol]);
 
-  console.log(player1Color, player2Color);
-  console.log(player1, player2);
+  const inputStyle = "mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:opacity-70 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-indigo-900";
 
   return (
-    <div>
-      <div
-        className="flex flex-col items-center justify-center min-h-screen 
-      bg-gradient-to-b from-blue-200 to-blue-300 text-black
-      dark:bg-gradient-to-b dark:from-blue-900 dark:to-indigo-950 dark:text-white font-inter rounded-2xl"
-      >
-        <h3 className="text-xl font-bold mb-2 text-center">
-          Hello {player1}, to decide who plays what and first, we play a simple
-          game.
-        </h3>
-        <span className="text-center m-2 p-2">
-          <p className="font-bold inline text-xl">{player1}</p> , please roll
-          the dice ranging from 1 to 20. if it lands on a number greater than
-          10, you win and you deicde what letter to play and play first, if you
-          loose then <p className="font-bold inline text-xl">{player2}</p> will
-          pick symbol and play first.
-        </span>
+    <>
+      <div className="grid items-center gap-8 lg:grid-cols-[1fr_0.85fr] lg:gap-16">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-indigo-700 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-300">
+            <Dices aria-hidden="true" className="h-4 w-4" /> Match setup
+          </span>
+          <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+            Let the dice <span className="text-indigo-600 dark:text-indigo-400">decide.</span>
+          </h1>
+          <p className="mt-5 max-w-lg text-base leading-7 text-slate-600 dark:text-slate-300">
+            One roll decides who chooses a symbol and makes the first move.
+          </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+              <p className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Roll 1–3</p>
+              <p className="mt-2 font-semibold">{player2 || "Player 2"} goes first</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+              <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Roll 4–6</p>
+              <p className="mt-2 font-semibold">{player1 || "Player 1"} goes first</p>
+            </div>
+          </div>
+        </div>
 
-        {/* Dice cube */}
-        <motion.div
-          animate={
-            rolling
-              ? { rotateX: 720, rotateY: 720, rotateZ: 720, scale: [1, 2.5, 1] }
-              : {}
-          }
-          transition={{ duration: 1.5, ease: "easeInOut" }}
-          className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center text-3xl font-bold rounded-xl shadow-2xl border border-blue-300"
-        >
-          {roll ? roll : "🎲"}
-        </motion.div>
-
-        {/* Result text */}
-        {result && (
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className={`mt-6 text-2xl font-semibold ${
-              roll < 10 ? "text-red-400" : "text-green-400"
-            }`}
+        <div className="rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-[0_24px_70px_-35px_rgba(67,56,202,0.4)] dark:border-slate-700 dark:bg-slate-900 sm:p-10">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">Your roll</p>
+          <div className="my-8 flex justify-center">
+            <Motion.div
+              animate={rolling && !reduceMotion ? { rotate: [0, -12, 12, -8, 0], scale: [1, 1.08, 1] } : {}}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="flex h-32 w-32 items-center justify-center rounded-[2rem] bg-gradient-to-br from-indigo-500 to-indigo-700 text-6xl font-black text-white shadow-xl shadow-indigo-500/30"
+            >
+              {roll ?? <Dices aria-hidden="true" className="h-16 w-16" />}
+            </Motion.div>
+          </div>
+          <div role="status" aria-live="polite" className="min-h-16">
+            {winner ? (
+              <>
+                <p className="text-xl font-bold">{roll <= 3 ? "You lost the roll" : "You won the roll"}</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{winner} chooses a symbol and starts.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xl font-bold">{rolling ? "Rolling..." : "Ready to roll?"}</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">A number from 1 to 6 will decide.</p>
+              </>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={rollDice}
+            disabled={open || rolling || Boolean(winner)}
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
           >
-            {result}
-          </motion.p>
-        )}
-
-        <button
-          onClick={rollDice}
-          disabled={rolling || winner}
-          className={`mt-8 px-8 py-3 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 ${
-            rolling || winner
-              ? "bg-gray-600 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          }`}
-        >
-          {rolling ? "Rolling..." : "Roll Dice"}
-        </button>
+            {rolling ? "Rolling..." : winner ? "Roll complete" : "Roll dice"} <ArrowRight aria-hidden="true" className="h-4 w-4" />
+          </button>
+          {currentPlayer && (
+            <a href="#match-setup" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-indigo-300">
+              Continue to match setup <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </a>
+          )}
+        </div>
       </div>
-      {/* Name Input Modal */}
+
       {open && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
-          <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-6 rounded-2xl shadow-2xl w-96 flex flex-col justify-center items-center">
-            {/* TITLE */}
-            <h3 className="text-xl font-bold mb-6 text-center">
-              {mode === "offlinebot"
-                ? "You're playing against"
-                : "Enter Player 2 Details"}
-            </h3>
-
-            {/* PLAYER 1 DISPLAY (Always You) */}
-            <div className="mb-4 w-full">
-              <label className="block mb-1 font-semibold text-sm">
-                Player 1
-              </label>
-              <input
-                type="text"
-                value={localStorage.getItem("username") || "Player 1"}
-                disabled
-                className={`w-full p-2 rounded-lg border border-gray-300 ${
-                  player1Color || "bg-gray-50"
-                } cursor-not-allowed text-black`}
-              />
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="setup-title" className="my-auto w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-white sm:p-8">
+            <div className="flex items-start justify-between gap-4">
+              <span className="inline-flex rounded-xl bg-indigo-50 p-3 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300"><Users aria-hidden="true" className="h-5 w-5" /></span>
+              <Link
+                to="/"
+                aria-label="Close match setup and return home"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <X aria-hidden="true" className="h-5 w-5" />
+              </Link>
             </div>
+            <p className="mt-5 text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Step {nameReady ? "2" : "1"} of 2</p>
+            <h2 id="setup-title" className="mt-1 text-2xl font-bold">{nameReady ? "Choose your colors" : "Meet the players"}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {nameReady ? "Each player picks and confirms a color." : "Set up your opponents before rolling the dice."}
+            </p>
 
-            {/* PLAYER 2 DISPLAY */}
-            <div className="mb-4 w-full">
-              <label className="block mb-1 font-semibold text-sm">
-                Player 2
-              </label>
-
-              {mode === "offlinebot" ? (
-                // BOT MODE → DISABLED
-                <input
-                  type="text"
-                  value="tictacbot"
-                  disabled
-                  className={`w-full p-2 rounded-lg border border-gray-300 ${
-                    player2Color || "bg-gray-50"
-                  } cursor-not-allowed text-black`}
-                />
-              ) : (
-                // MULTIPLAYER MODE → USER ENTERS NAME
-                <input
-                  type="text"
-                  placeholder="Enter Player 2 Name"
-                  onChange={(e) => setPlayer2(e.target.value)}
-                  className={`w-full p-2 rounded-lg border border-gray-300 ${
-                    player2Color || "bg-gray-50"
-                  } text-black`}
-                />
-              )}
-            </div>
-
-            {/* COLOR PICKER */}
-            {nameReady && (
-              <div className="mb-4 w-full">
-                {player1Color === "" || player2Color === "" ? (
-                  <label className="block mb-2 font-semibold text-sm">
-                    Choose Your Color:{" "}
-                    {player1Color === ""
-                      ? localStorage.getItem("username")
-                      : player2}
-                  </label>
-                ) : (
-                  <label className="block mb-2 font-semibold text-sm">
-                    Color selection completed, pelase click on continue.
-                  </label>
-                )}
-
+            {!nameReady ? (
+              <div className="mt-6 space-y-4">
+                <label className="block text-sm font-semibold">Player 1
+                  <input type="text" value={username || "Player 1"} disabled className={inputStyle} />
+                </label>
+                <label className="block text-sm font-semibold">Player 2
+                  {mode === "offlinebot" ? (
+                    <input type="text" value="tictacbot" disabled className={inputStyle} />
+                  ) : (
+                    <input type="text" placeholder="Enter Player 2 Name" value={player2} onChange={(event) => setPlayer2(event.target.value)} className={inputStyle} />
+                  )}
+                </label>
+                <button
+                  type="button"
+                  disabled={player2 === "" && mode !== "offlinebot"}
+                  onClick={() => {
+                    const p2 = player2 === "" ? "tictacbot" : player2;
+                    setPlayer1(username);
+                    setPlayer2(p2);
+                    localStorage.setItem("player1", username);
+                    localStorage.setItem("player2", p2);
+                    setNameReady(true);
+                  }}
+                  className="min-h-12 w-full rounded-xl bg-indigo-600 px-4 py-3 font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                >
+                  Choose colors
+                </button>
+              </div>
+            ) : (
+              <div className="mt-6">
+                <p className="mb-3 text-sm font-semibold">
+                  {player1Color === "" || player2Color === ""
+                    ? `Choosing for ${player1Color === "" ? username : player2}`
+                    : "Color selection complete"}
+                </p>
                 <ColorPicker
                   player1Color={player1Color}
                   player2Color={player2Color}
                   setPlayer1Color={setPlayer1Color}
                   setPlayer2Color={setPlayer2Color}
-                  player1={localStorage.getItem("username")}
+                  player1={player1}
                   player2={player2}
                 />
+                <button
+                  type="button"
+                  disabled={player1Color === "" || player2Color === ""}
+                  onClick={() => {
+                    localStorage.setItem("player1Color", player1Color);
+                    localStorage.setItem("player2Color", player2Color);
+                    setOpen(false);
+                  }}
+ className="mt-5 min-h-12 w-full rounded-xl bg-indigo-600 px-4 py-3
+    font-bold text-white transition-all duration-200
+    hover:bg-indigo-700
+    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600
+    disabled:cursor-not-allowed
+    disabled:bg-slate-300 disabled:text-slate-500
+    disabled:shadow-none disabled:hover:bg-slate-300
+    dark:disabled:bg-slate-700 dark:disabled:text-slate-400"                >
+                  Continue to dice
+                </button>
               </div>
             )}
-
-            {/* BUTTON */}
-            {nameReady ? (
-              <button
-                onClick={() => {
-                  localStorage.setItem("player1Color", player1Color);
-                  localStorage.setItem("player2Color", player2Color);
-                  setOpen(false);
-                }}
-                className={`p-2 bg-blue-400 rounded-xl shadow-xl transition-transform duration-500 w-1/2 
-                  ${
-                    player1Color !== "" && player2Color !== ""
-                      ? "scale-110"
-                      : "scale-75"
-                  }`}
-              >
-                Continue
-              </button>
-            ) : (
-              <button
-                disabled={player2 === "" && mode !== "offlinebot"}
-                onClick={() => {
-                  let p1 = localStorage.getItem("username");
-                  const p2 = player2 === "" ? "tictacbot" : player2;
-
-                  setPlayer1(p1);
-                  setPlayer2(p2);
-                  localStorage.setItem("player1", p1);
-                  localStorage.setItem("player2", p2);
-                  setNameReady(true);
-                }}
-                className={`
-                  w-full mt-4 py-2 rounded-lg font-semibold text-white 
-                  transition-all 
-                  ${
-                    player2 === "" && mode !== "offlinebot"
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }
-                `}
-              >
-                Ok
-              </button>
-            )}
           </div>
         </div>
       )}
 
-      {/* Symbol Choice Modal */}
       {symbolModal && winner && (
-        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-black/60 animate-fadeIn">
-          <div className="bg-gray-900/70 backdrop-blur-xl text-white p-8 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] w-[22rem] text-center border border-white/10 animate-scaleIn">
-            {/* Title */}
-            <h3 className="font-extrabold text-lg mb-4 leading-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-600">
-                🏆 {winner}
-              </span>{" "}
-              won the dice roll!
-              <br />
-              <span className="text-gray-300 text-sm">
-                {winner === "tictacbot"
-                  ? "Choosing its symbol…"
-                  : "Please choose your symbol"}
-              </span>
-            </h3>
-
-            {/* Buttons */}
-            <div className="flex justify-center gap-6 mt-4">
-              {/* X Button */}
-              <button
-                disabled={winner === "tictacbot"}
-                className={`text-white text-3xl font-bold px-7 py-3 rounded-xl transition-all duration-300 shadow-lg
-            ${
-              winner === "tictacbot"
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-blue-600 hover:bg-blue-700 hover:shadow-[0_0_15px_rgba(59,130,246,0.7)]"
-            }`}
-                onClick={() => handleSymbolChoice("X")}
-              >
-                X
-              </button>
-
-              {/* O Button */}
-              <button
-                disabled={winner === "tictacbot"}
-                className={`text-white text-3xl font-bold px-7 py-3 rounded-xl transition-all duration-300 shadow-lg
-            ${
-              winner === "tictacbot"
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-red-600 hover:bg-red-700 hover:shadow-[0_0_15px_rgba(239,68,68,0.7)]"
-            }`}
-                onClick={() => handleSymbolChoice("O")}
-              >
-                O
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="symbol-title" className="my-auto w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-900 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+            <span className="mx-auto inline-flex rounded-2xl bg-amber-50 p-3 text-amber-600 dark:bg-amber-950 dark:text-amber-400"><Trophy aria-hidden="true" className="h-6 w-6" /></span>
+            <h2 id="symbol-title" className="mt-5 text-2xl font-bold">{winner} won the roll!</h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {winner === "tictacbot" ? "The bot is choosing its symbol..." : "Choose the symbol you want to play."}
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {["X", "O"].map((symbol) => (
+                <button
+                  key={symbol}
+                  type="button"
+                  aria-label={`Choose ${symbol}`}
+                  disabled={winner === "tictacbot"}
+                  onClick={() => handleSymbolChoice(symbol)}
+                  className={`min-h-20 rounded-2xl text-4xl font-black transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 ${symbol === "X" ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950 dark:text-indigo-300" : "bg-rose-50 text-rose-500 hover:bg-rose-100 dark:bg-rose-950 dark:text-rose-300"}`}
+                >
+                  {symbol}
+                </button>
+              ))}
             </div>
+            <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"><Sparkles aria-hidden="true" className="h-3.5 w-3.5" /> The other player gets the remaining symbol.</p>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

@@ -102,7 +102,7 @@ User clicks → makeMove(i, j)
 | PATTERN_BOMB | 2 pts | Clear row/column/diagonal | 1 turn |
 | OVERRIDE | 4 pts | Replace 1 opponent symbol | 1 turn |
 | DOUBLE_OVERRIDE | 5 pts | Replace 2 opponent symbols | 2 turns |
-| TWIST | 3 pts | Swap symbols with opponent | 2 turns |
+| TWIST | 1 pt | Swap symbols with opponent | 2 turns |
 
 **Move Selection**: See `GameSpecialMoves.jsx` and `descriptionHelper.js`
 
@@ -633,4 +633,3 @@ Before pushing to production:
 ## 📞 QUESTIONS?
 
 Refer to `PROJECT_ANALYSIS.md` for detailed architecture, class responsibilities, and data flow.
-
