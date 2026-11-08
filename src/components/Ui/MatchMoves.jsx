@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import GuideProgress from "./GuideProgress";
+import { specialMoveCost } from "../utils/descriptionHelper";
 import {
   Star,
   Slash,
@@ -10,6 +12,7 @@ import {
 
 const MatchMoves = ({ setMovesRead }) => {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  const [furthestMoveIndex, setFurthestMoveIndex] = useState(0);
 
   const moves = [
     {
@@ -31,7 +34,7 @@ const MatchMoves = ({ setMovesRead }) => {
         <SwitchCamera className="w-6 h-6 text-green-500 dark:text-green-300" />
       ),
       title: "Twist Mode",
-      cost: "3 Points",
+      cost: `${specialMoveCost.get("TWIST")} Point`,
       description:
         "For 2 turns, you and your opponent swap symbols 🔄. Confuse, distract, and dominate in style!",
     },
@@ -104,7 +107,11 @@ const MatchMoves = ({ setMovesRead }) => {
           {currentMoveIndex < moves.length - 1 ? (
             <button
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition-all duration-200"
-              onClick={() => setCurrentMoveIndex((prev) => prev + 1)}
+              onClick={() => {
+                const nextIndex = currentMoveIndex + 1;
+                setCurrentMoveIndex(nextIndex);
+                setFurthestMoveIndex((prev) => Math.max(prev, nextIndex));
+              }}
             >
               Next ➡
             </button>
@@ -120,6 +127,7 @@ const MatchMoves = ({ setMovesRead }) => {
             </button>
           )}
         </div>
+        <GuideProgress label="Special moves" viewed={furthestMoveIndex + 1} total={moves.length} />
       </div>
     </div>
   );

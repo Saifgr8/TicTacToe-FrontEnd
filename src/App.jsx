@@ -7,7 +7,8 @@ import OnlinepvpPage from "./components/onlinePVPPage/OnlinepvpPage";
 import GameBoard from "./components/game/GameBoard";
 import Offlinepage from "./components/offlinePage/Offlinepage";
 import OfflineGamePage from "./components/offlinePage/OfflineGamePage";
-import { ToastContainer, toast } from "react-toastify";
+import RequireAuth from "./components/auth/RequireAuth";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const googleClientId =
@@ -24,10 +25,12 @@ function AppRoutes() {
       <Routes>
         <Route path="/signin" element={<Auth />} />
         <Route path="/" element={<Homepage />} />
-        <Route path="/onlinePVPPage" element={<OnlinepvpPage />} />
-        <Route path="/gameBoard" element={<GameBoard />} />
-        <Route path="/offlinePage" element={<Offlinepage />} />
-        <Route path="/offlineGamePage" element={<OfflineGamePage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/onlinePVPPage" element={<OnlinepvpPage />} />
+          <Route path="/gameBoard" element={<GameBoard />} />
+          <Route path="/offlinePage" element={<Offlinepage />} />
+          <Route path="/offlineGamePage" element={<OfflineGamePage />} />
+        </Route>
       </Routes>
     </>
   );

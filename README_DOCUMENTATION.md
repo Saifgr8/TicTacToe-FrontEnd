@@ -168,7 +168,7 @@
 │ • NORMAL ................... 0 pts      │
 │ • EMPTY_CELL .............. 2 pts      │
 │ • PATTERN_BOMB ............ 2 pts      │
-│ • TWIST ................... 3 pts      │
+│ • TWIST ................... 1 pt       │
 │ • OVERRIDE ................ 4 pts      │
 │ • DOUBLE_OVERRIDE ......... 5 pts      │
 │                                         │
@@ -438,4 +438,3 @@ Happy coding! 🚀
 **Code Status**: ✅ Analyzed (not modified)  
 **Ready for Development**: ✅ YES  
 **Last Updated**: 2026-11-07
-

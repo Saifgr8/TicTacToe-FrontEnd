@@ -5,6 +5,8 @@ import GamePlayingBoard from "../components/Ui/GamePlayingBoard";
 import GameSpecialMoves from "../components/Ui/GameSpecialMoves";
 import PlayerScoreDisplay from "../components/Ui/PlayerScoreDisplay";
 import { useLocation, useNavigate } from "react-router-dom";
+import { specialMoveCost as sharedSpecialMoveCost } from "../components/utils/descriptionHelper";
+import { getCurrentPlayerSymbol } from "../components/utils/sessionSymbols";
 
 const WebSocketGameBoard = ({
   player1Username,
@@ -12,20 +14,40 @@ const WebSocketGameBoard = ({
   player1Symbol,
   player2Symbol,
   currentPlayer,
-  currentPlayerSymbol,
 }) => {
   const stompClient = useRef(null);
   const [session, setSession] = useState(null);
   const [board, setBoard] = useState([]);
   const [connected, setConnected] = useState(false);
-  const [currentSymbol, setCurrentSymbol] = useState(currentPlayerSymbol);
   const [selectedMoveType, setSelectedMoveType] = useState("");
   const [selectedMovePattern, setSelectedMovePattern] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const username = localStorage.getItem("username");
+  const currentSymbol = getCurrentPlayerSymbol(
+    session,
+    session?.player1Username || player1Username,
+    session?.player2Username || player2Username
+  );
+  const previewTwist = Boolean(
+    session && session.gameStatus === "ONGOING" &&
+    session.currentPlayer === username && !session.twistActive &&
+    selectedMoveType === "TWIST"
+  );
+  const displayedCurrentSymbol = getCurrentPlayerSymbol(
+    session,
+    session?.player1Username || player1Username,
+    session?.player2Username || player2Username,
+    previewTwist
+  );
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (session?.twistActive) {
+      setSelectedMoveType((selected) => selected === "TWIST" ? "NORMAL" : selected);
+    }
+  }, [session?.twistActive]);
 
   const moveDescriptions = new Map([
     ["NORMAL", "Standard move to an empty cell."],
@@ -45,12 +67,12 @@ const WebSocketGameBoard = ({
     ["TWIST", "Exchange the symbols for 2 turns. THIS IS CRAZZZYYY"],
   ]);
   const specialMoveCost = new Map([
-    ["NORMAL", 0],
-    ["EMPTY_CELL", 2],
-    ["OVERRIDE", 3],
-    ["DOUBLE_OVERRIDE", 4],
-    ["EMPTY_PATTERN", 4],
-    ["TWIST", 5],
+    ["NORMAL", sharedSpecialMoveCost.get("NORMAL")],
+    ["EMPTY_CELL", sharedSpecialMoveCost.get("EMPTY_CELL")],
+    ["OVERRIDE", sharedSpecialMoveCost.get("OVERRIDE")],
+    ["DOUBLE_OVERRIDE", sharedSpecialMoveCost.get("DOUBLE_OVERRIDE")],
+    ["EMPTY_PATTERN", sharedSpecialMoveCost.get("EMPTY_PATTERN")],
+    ["TWIST", sharedSpecialMoveCost.get("TWIST")],
   ]);
 
   const movePatterns = ["ROW", "COLUMN", "LEFT_DIAGONAL", "RIGHT_DIAGONAL"];
@@ -108,6 +130,15 @@ const WebSocketGameBoard = ({
       // Ensure it's the current player's turn
       console.log("❌ Not your turn!");
       setErrorMessage("It's not your turn!");
+      return;
+    }
+    if (session.twistActive && selectedMoveType === "TWIST") {
+      setSelectedMoveType("NORMAL");
+      setErrorMessage("Twist is unavailable while a twist is active.");
+      return;
+    }
+    if (!currentSymbol) {
+      setErrorMessage("Could not determine the current player's symbol.");
       return;
     }
 
@@ -179,16 +210,6 @@ const WebSocketGameBoard = ({
             setBoard(gameData.board);
             setErrorMessage("");
 
-            const assignedSymbol =
-              gameData.currentPlayer.trim().toLowerCase() ===
-              player1Username.trim().toLowerCase()
-                ? player1Symbol
-                : player2Symbol;
-
-            console.log("🧠 session currentPlayer:", gameData.currentPlayer);
-            console.log("🎯 Assigned symbol:", assignedSymbol);
-
-            setCurrentSymbol(assignedSymbol);
           });
         }
 
@@ -233,9 +254,9 @@ const WebSocketGameBoard = ({
         Tic Tac Twist Game
       </h1>
 
-      {/* {errorMessage && (
-        <p className="text-red-500 mb-4 font-semibold">{errorMessage}</p>
-      )} */}
+      {errorMessage && (
+        <p role="alert" className="text-red-500 mb-4 font-semibold">{errorMessage}</p>
+      )}
 
       {/* Display current game status */}
       <div className="w-full justify-around items-center flex flex-col">
@@ -246,7 +267,7 @@ const WebSocketGameBoard = ({
               {session.currentPlayer === username
                 ? "You"
                 : session.currentPlayer}{" "}
-              ({currentSymbol})
+              ({displayedCurrentSymbol}{previewTwist && " preview"})
             </span>
           </p>
         )}
@@ -274,7 +295,8 @@ const WebSocketGameBoard = ({
         player1Symbol={session?.player1Symbol}
         player2Points={session?.player2Points}
         player2Symbol={session?.player2Symbol}
-        isTwistActive={session?.isTwistActive}
+        isTwistActive={session?.twistActive}
+        previewTwist={previewTwist}
         player1TwistTurnsLeft={session?.player1TwistTurnsLeft}
         player2TwistTurnsLeft={session?.player2TwistTurnsLeft}
       />
@@ -307,7 +329,7 @@ const WebSocketGameBoard = ({
             emptyPatternMoveDescription={emptyPatternMoveDescription}
             selectedMovePattern={selectedMovePattern}
             moveDescriptions={moveDescriptions}
-            isTwistActive={session.isTwistActive} // Pass twist status
+            isTwistActive={session.twistActive}
             isDoubleOverrideActive={session.isDoubleOverrideActive} // Pass double override status
           />
         </div>

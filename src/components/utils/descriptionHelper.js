@@ -18,7 +18,7 @@ export const specialMoveCost = new Map([
   ["PATTERN_BOMB", 2],
   ["OVERRIDE", 4],
   ["DOUBLE_OVERRIDE", 5],
-  ["TWIST", 3],
+  ["TWIST", 1],
 ]);
 
 export const movePatterns = [

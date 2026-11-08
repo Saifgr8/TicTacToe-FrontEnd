@@ -11,7 +11,7 @@
 
 ### Key Features
 1. ✅ **6x6 Board Gameplay** with special moves that cost points
-2. ✅ **Point-Based Move System** (Normal=0, Twist=3, Override=4, etc.)
+2. ✅ **Point-Based Move System** (Normal=0, Twist=1, Override=4, etc.)
 3. ✅ **Real-Time WebSocket** for online games (STOMP over SockJS)
 4. ✅ **Rock-Paper-Scissors Tiebreaker** to determine symbols
 5. ✅ **Dark Mode** with persistent theme storage
@@ -174,7 +174,7 @@ Game Over
 | PATTERN_BOMB | 2 pts | Clear row/column/diagonal | 1 |
 | OVERRIDE | 4 pts | Replace 1 opponent symbol | 1 |
 | DOUBLE_OVERRIDE | 5 pts | Replace 2 opponent symbols | 2 |
-| TWIST | 3 pts | Swap symbols with opponent | 2 |
+| TWIST | 1 pt | Swap symbols with opponent | 2 |
 
 **Points accumulate** as players complete patterns. Special moves require minimum points.
 
@@ -458,4 +458,3 @@ Before implementing new features:
 ---
 
 **Project Status**: 🟢 Core game fully functional. Online multiplayer & special features in testing.
-

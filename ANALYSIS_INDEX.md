@@ -96,7 +96,7 @@ Java Spring Boot Backend (localhost:8080)
 - **Board**: 6x6 grid
 - **Win**: 3 consecutive cells (any row/column/diagonal)
 - **Points**: Earned by completing patterns; used to afford special moves
-- **Special Moves**: NORMAL (0), EMPTY_CELL (2), PATTERN_BOMB (2), TWIST (3), OVERRIDE (4), DOUBLE_OVERRIDE (5)
+- **Special Moves**: NORMAL (0), EMPTY_CELL (2), PATTERN_BOMB (2), TWIST (1), OVERRIDE (4), DOUBLE_OVERRIDE (5)
 - **Turns**: 30-second limit per player
 
 ### Implementation Status
@@ -203,7 +203,7 @@ export const specialMoveCost = new Map([
   ["NORMAL", 0],
   ["EMPTY_CELL", 2],
   ["PATTERN_BOMB", 2],
-  ["TWIST", 3],
+  ["TWIST", 1],
   ["OVERRIDE", 4],
   ["DOUBLE_OVERRIDE", 5]
 ]);
@@ -326,4 +326,3 @@ className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
 ---
 
 **Ready to start development? Begin with the copilot-instructions.md and refer to PROJECT_ANALYSIS.md as needed.**
-

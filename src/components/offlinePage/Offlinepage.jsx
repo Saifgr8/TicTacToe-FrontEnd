@@ -1,11 +1,12 @@
-import React from "react";
-import Dice from "../Ui/Dice";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, Flag, Sparkles } from "lucide-react";
+import Dice from "../Ui/Dice";
 import MatchRules from "../Ui/MatchRules";
 import MatchMoves from "../Ui/MatchMoves";
 import Footer from "../Ui/Footer";
-import { useNavigate } from "react-router-dom";
+
+const offlineMatchRules = [0, 2, 3, 6, 7, 9];
 
 const Offlinepage = () => {
   const [player1, setPlayer1] = useState("");
@@ -17,111 +18,78 @@ const Offlinepage = () => {
   const [player2Color, setPlayer2Color] = useState("");
   const [rulesRead, setRulesRead] = useState(false);
   const [movesRead, setMovesRead] = useState(false);
-
-  const ofMatchRulesIndices = [0, 2, 3, 6, 7, 9];
   const navigate = useNavigate();
-  console.log(rulesRead, movesRead);
+
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-blue-200 via-indigo-700 to-black
-    dark:bg-gradient-to-br dark:from-gray-900 dark:via-indigo-900 dark:to-black
-     flex flex-col items-center justify-center text-white font-inter "
-    >
-      <h1 className="text-3xl md:text-4xl font-extrabold mb-8 text-center">
-        🎲 Tic Tac Roll – Who Goes First & plays what?
-      </h1>
+    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-[#f8f8fc] text-slate-900 dark:bg-slate-950 dark:text-white">
+      <main className="relative flex-1 overflow-hidden bg-[length:80px_80px] bg-[linear-gradient(to_right,rgba(99,102,241,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.07)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)]">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full bg-indigo-200/50 blur-3xl dark:bg-indigo-900/30" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 top-32 h-80 w-80 rounded-full bg-rose-100/70 blur-3xl dark:bg-fuchsia-900/20" />
+        <div className="relative mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-20">
+          <Dice
+            player1={player1}
+            setPlayer1={setPlayer1}
+            player2={player2}
+            setPlayer2={setPlayer2}
+            setPlayer1Symbol={setPlayer1Symbol}
+            setPlayer2Symbol={setPlayer2Symbol}
+            currentPlayer={currentPlayer}
+            setCurrentPlayer={setCurrentPlayer}
+            player1Color={player1Color}
+            player2Color={player2Color}
+            setPlayer1Color={setPlayer1Color}
+            setPlayer2Color={setPlayer2Color}
+          />
 
-      {/* Dice section */}
-      <Dice
-        player1={player1}
-        setPlayer1={setPlayer1}
-        player2={player2}
-        setPlayer2={setPlayer2}
-        player1Symbol={player1Symbol}
-        setPlayer1Symbol={setPlayer1Symbol}
-        player2Symbol={player2Symbol}
-        setPlayer2Symbol={setPlayer2Symbol}
-        currentPlayer={currentPlayer}
-        setCurrentPlayer={setCurrentPlayer}
-        player1Color={player1Color}
-        player2Color={player2Color}
-        setPlayer1Color={setPlayer1Color}
-        setPlayer2Color={setPlayer2Color}
-      />
+          {currentPlayer && (
+            <section id="match-setup" className="mt-16 scroll-mt-6 border-t border-slate-200 pt-12 dark:border-slate-800" aria-labelledby="match-setup-title">
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400"><Sparkles aria-hidden="true" className="h-4 w-4" /> Almost ready</p>
+              <h2 id="match-setup-title" className="mt-2 text-3xl font-bold tracking-tight">Your match setup</h2>
+              <p className="mt-3 text-slate-600 dark:text-slate-400">Meet the players, then review the rules before the match.</p>
 
-      {/* Game summary */}
-      {currentPlayer && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mt-10 bg-gradient-to-br from-blue-300 to-blue-500
-          dark:bg-gradient-to-br dark:from-indigo-900 dark:to-purple-900 
-          rounded-2xl shadow-2xl w-full  p-6 text-center border border-indigo-500/30"
-        >
-          <h2 className="text-2xl font-bold mb-4 dark:text-indigo-300 text-blue-500">
-            🎮 Match Setup
-          </h2>
-          <div className="grid grid-cols-2 gap-4 text-lg">
-            <div
-              className={`${player1Color} p-4 rounded-xl shadow-xl border border-pink-400/30 transform hover:scale-105 transition-transform duration-300`}
-            >
-              <p className="font-semibold text-indigo-200">{player1}</p>
-              <p className="text-3xl font-extrabold text-white mt-1">
-                {player1Symbol || "-"}
-              </p>
-            </div>
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                {[
+                  { name: player1, symbol: player1Symbol, color: player1Color },
+                  { name: player2, symbol: player2Symbol, color: player2Color },
+                ].map((player, index) => (
+                  <div key={index} className={`${player.color || "bg-slate-700"} flex items-center justify-between gap-4 rounded-2xl p-5 text-white shadow-sm`}>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wider text-white">Player {index + 1}</p>
+                      <p className="mt-2 break-words text-xl font-bold">{player.name}</p>
+                    </div>
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-black/20 text-3xl font-black">{player.symbol || "—"}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-3 text-sm text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200"><Flag aria-hidden="true" className="h-4 w-4 shrink-0" /><strong>{currentPlayer}</strong> starts first.</p>
 
-            <div
-              className={`${player2Color} p-4 rounded-xl shadow-xl border border-pink-400/30 transform hover:scale-105 transition-transform duration-300`}
-            >
-              <p className="font-semibold text-pink-200">{player2}</p>
-              <p className="text-3xl font-extrabold text-white mt-1">
-                {player2Symbol || "-"}
-              </p>
-            </div>
-          </div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-6"
-          >
-            <p className="text-xl m-2 p-2">
-              🏁{" "}
-              <span className="font-semibold dark:text-green-400 text-green-700">
-                {currentPlayer}
-              </span>{" "}
-              starts first!
-            </p>
-          </motion.div>
-          <p className="m-2 p-2 text-blue-800 dark:text-white">
-            Please go over the match and game rules before you proceed to game.
-          </p>
-          <div className="flex md:flex-row flex-col justify-between items-center gap-3">
-            <MatchRules
-              valid={ofMatchRulesIndices}
-              setRulesRead={setRulesRead}
-            />
-            <MatchMoves setMovesRead={setMovesRead} />
-          </div>
-
-          <button
-            disabled={!movesRead || !rulesRead}
-            onClick={() => navigate("/offlineGamePage")}
-            className={`text-white  px-4 py-2 rounded transition-all duration-200 cursor-pointer mt-4 ${
-              !rulesRead || !movesRead
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {!rulesRead || !movesRead ? "Read rules and moves" : "Begin match"}
-          </button>
-        </motion.div>
-      )}
-      <div className="w-full">
-        <Footer />
-      </div>
+              <div className="mt-10">
+                <h3 className="text-xl font-bold">Get to know the game</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Read through both guides and select Done to unlock the match.</p>
+                <div className="mt-5 grid items-start gap-4 lg:grid-cols-2">
+                  <div>
+                    <p className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-400">Match rules {rulesRead && "✓"}</p>
+                    <MatchRules valid={offlineMatchRules} timeoutForfeit setRulesRead={setRulesRead} />
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-400">Special moves {movesRead && "✓"}</p>
+                    <MatchMoves setMovesRead={setMovesRead} />
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={!movesRead || !rulesRead}
+                onClick={() => navigate("/offlineGamePage")}
+                className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+              >
+                {!rulesRead || !movesRead ? "Read rules and moves to continue" : "Begin match"} <ArrowRight aria-hidden="true" className="h-4 w-4" />
+              </button>
+            </section>
+          )}
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 };
