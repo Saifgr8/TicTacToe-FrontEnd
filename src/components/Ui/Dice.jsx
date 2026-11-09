@@ -3,6 +3,9 @@ import { motion as Motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Dices, Sparkles, Trophy, Users, X } from "lucide-react";
 import ColorPicker from "./ColorPicker";
+import dice from "../../assets/dice.json";
+import Lottie from "lottie-react";
+
 
 const Dice = ({
   player1,
@@ -104,18 +107,23 @@ const Dice = ({
         <div className="rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-[0_24px_70px_-35px_rgba(67,56,202,0.4)] dark:border-slate-700 dark:bg-slate-900 sm:p-10">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">Your roll</p>
           <div className="my-8 flex justify-center">
-            <Motion.div
+            {/* <Motion.div
               animate={rolling && !reduceMotion ? { rotate: [0, -12, 12, -8, 0], scale: [1, 1.08, 1] } : {}}
               transition={{ duration: 1.5, ease: "easeInOut" }}
               className="flex h-32 w-32 items-center justify-center rounded-[2rem] bg-gradient-to-br from-indigo-500 to-indigo-700 text-6xl font-black text-white shadow-xl shadow-indigo-500/30"
             >
               {roll ?? <Dices aria-hidden="true" className="h-16 w-16" />}
-            </Motion.div>
+            </Motion.div> */}
+            <Lottie animationData={dice} loop={rolling} className="h-32 w-32" />
           </div>
           <div role="status" aria-live="polite" className="min-h-16">
             {winner ? (
               <>
-                <p className="text-xl font-bold">{roll <= 3 ? "You lost the roll" : "You won the roll"}</p>
+
+  <span className="inline-flex min-w-8 h-8 items-center justify-center rounded-lg border border-indigo-300 bg-indigo-100 px-2 text-lg font-extrabold text-indigo-700 shadow-sm dark:border-indigo-500/40 dark:bg-indigo-500/20 dark:text-indigo-300">
+    {roll}
+  </span>
+             <p className="text-xl font-bold">{roll <= 3 ? "You lost the roll" : "You won the roll"}</p>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{winner} chooses a symbol and starts.</p>
               </>
             ) : (
