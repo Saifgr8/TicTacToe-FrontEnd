@@ -104,9 +104,7 @@ const GamePlayingBoard = ({
           // 1) If this is a confirmed win highlight (isWinActive) -> green
           // 2) Else if it's a temporary highlight (threePatterns) -> use player color logic
           // 3) Else normal/default
-          const cellClass = isMoveHighlighted
-            ? "bg-gray-200 dark:bg-gray-700"
-            : isHighlighted
+          const cellClass = isHighlighted
             ? isWinActive
               ? "bg-green-300 dark:bg-green-700"
               : currentPlayer === (localName || player1)
@@ -122,7 +120,7 @@ const GamePlayingBoard = ({
               type="button"
               aria-label={`Row ${showCoordinates ? getRowLabel(i) : i + 1}, column ${j + 1}: ${cell || "empty"}`}
               disabled={disabled || isWinActive}
-              className={`min-w-0 flex items-center justify-center rounded-lg border font-bold transition duration-150 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${disabled || isWinActive ? "cursor-not-allowed" : "cursor-pointer"} ${cellClass} ${isMoveHighlighted ? "relative z-10 !border-blue-900 ring-2 ring-blue-900 motion-safe:scale-125 dark:!border-blue-400 dark:ring-blue-400" : "border-slate-300 dark:border-slate-600"}`}
+              className={`min-w-0 flex items-center justify-center rounded-lg border font-bold transition duration-150 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${disabled || isWinActive ? "cursor-not-allowed" : "cursor-pointer"} ${cellClass} ${isMoveHighlighted ? "!border-blue-900 dark:!border-blue-400" : "border-slate-300 dark:border-slate-600"}`}
               style={{ fontSize: `clamp(0.75rem, ${65 / board.length}cqw, 3.25rem)` }}
               onClick={() => handleClick(i, j)}
             >

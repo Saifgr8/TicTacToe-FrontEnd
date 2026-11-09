@@ -6,8 +6,9 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Auth = () => {
+  const location = useLocation();
   const [formErrors, setFormErrors] = useState("");
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(location.state?.loginRequired === true);
   const {
     register,
     handleSubmit,
@@ -15,7 +16,6 @@ const Auth = () => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
-  const location = useLocation();
 
   //SIGN IN
   const signIn = async (data) => {

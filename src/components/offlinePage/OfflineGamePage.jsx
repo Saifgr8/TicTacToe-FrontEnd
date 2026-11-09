@@ -21,6 +21,7 @@ import { getBoardCoordinate } from "../utils/boardCoordinates";
 const BOT_POLL_INTERVAL = 400;
 const BOT_HIGHLIGHT_DURATION = 500;
 const BOT_SPECIAL_REVIEW_DURATION = 2500;
+const DRAW_TRANSITION_DURATION = 2000;
 
 const OfflineGamePage = () => {
   const [setup] = useState(() => ({
@@ -54,6 +55,7 @@ const OfflineGamePage = () => {
   const [botMoveHighlight, setBotMoveHighlight] = useState(null);
   const [reviewingBotMove, setReviewingBotMove] = useState(false);
   const [movePending, setMovePending] = useState(false);
+  const [drawTransition, setDrawTransition] = useState(false);
   const gameOverRef = useRef(false);
   const movePendingRef = useRef(false);
   const mountedRef = useRef(false);
@@ -62,6 +64,8 @@ const OfflineGamePage = () => {
   const highlightTimerRef = useRef(null);
   const reviewTimerRef = useRef(null);
   const botSpecialPendingRef = useRef(false);
+  const boardSizeRef = useRef(0);
+  const drawTransitionTimerRef = useRef(null);
   const p1Name = session?.player1Username || player1LocalName || player1;
   const p2Name = session?.player2Username || player2;
   const currentPlayerSymbol = getCurrentPlayerSymbol(session, p1Name, p2Name);
@@ -86,7 +90,18 @@ const OfflineGamePage = () => {
       mountedRef.current = false;
       clearTimeout(highlightTimerRef.current);
       clearTimeout(reviewTimerRef.current);
+      clearTimeout(drawTransitionTimerRef.current);
     };
+  }, []);
+
+  const updateBoard = useCallback((updated) => {
+    if (boardSizeRef.current > 0 && updated.board.length > boardSizeRef.current && updated.winner == null) {
+      clearTimeout(drawTransitionTimerRef.current);
+      setDrawTransition(true);
+      drawTransitionTimerRef.current = setTimeout(() => setDrawTransition(false), DRAW_TRANSITION_DURATION);
+    }
+    boardSizeRef.current = updated.board.length;
+    setBoard((previous) => JSON.stringify(previous) === JSON.stringify(updated.board) ? previous : updated.board);
   }, []);
 
   useEffect(() => {
@@ -109,7 +124,7 @@ const OfflineGamePage = () => {
       if (data?.error) throw new Error(getBackendErrorMessage(data, "Could not create game."));
       if (!Array.isArray(data?.board)) throw new Error("The game server returned an invalid session.");
       setSession(data);
-      setBoard(data.board);
+      updateBoard(data);
       if (data.winner != null) {
         gameOverRef.current = true;
         setGameWinner(data.winner);
@@ -120,7 +135,7 @@ const OfflineGamePage = () => {
       else setErrorMessage(error.message || "Could not create game.");
     });
     return () => { active = false; };
-  }, [validSetup, setup, player1LocalName, player2, token, replayKey]);
+  }, [validSetup, setup, player1LocalName, player2, token, replayKey, updateBoard]);
 
   const handleTimeUp = useCallback(() => {
     if (gameOverRef.current) return;
@@ -140,7 +155,7 @@ const OfflineGamePage = () => {
     resetSignal: timerKey,
     onTimeUp: handleTimeUp,
     gameWinner,
-    enabled: Boolean(session) && !session?.botThinking && !session?.botError && !pollError && !reviewingBotMove,
+    enabled: Boolean(session) && !session?.botThinking && !session?.botError && !pollError && !reviewingBotMove && !drawTransition,
   });
 
   useEffect(() => {
@@ -157,7 +172,7 @@ const OfflineGamePage = () => {
           throw new Error("The game server returned an invalid session.");
         }
         setSession(updated);
-        setBoard((previous) => JSON.stringify(previous) === JSON.stringify(updated.board) ? previous : updated.board);
+        updateBoard(updated);
         if (player2 === "tictacbot" && updated.lastMove && updated.lastMovePlayer === player2) {
           const moveKey = JSON.stringify([updated.lastMove, updated.board]);
           if (moveKey !== lastBotMoveKeyRef.current) {
@@ -207,7 +222,7 @@ const OfflineGamePage = () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [session?.sessionId, session?.botThinking, session?.botError, pollError, gameWinner, player2, token]);
+  }, [session?.sessionId, session?.botThinking, session?.botError, pollError, gameWinner, player2, token, updateBoard]);
 
   useEffect(() => {
     setSelectedMoveType(session?.doubleOverrideActive ? "DOUBLE_OVERRIDE" : "NORMAL");
@@ -215,7 +230,7 @@ const OfflineGamePage = () => {
   }, [session]);
 
   const makeMove = async (x, y) => {
-    if (!session || session.botThinking || session.botError || pollError || reviewingBotMove ||
+    if (!session || session.botThinking || session.botError || pollError || reviewingBotMove || drawTransition ||
         gameOverRef.current || movePendingRef.current) return;
     if (session.twistActive && selectedMoveType === "TWIST") {
       setSelectedMoveType("NORMAL");
@@ -243,7 +258,7 @@ const OfflineGamePage = () => {
       if (updated?.error) throw new Error(getBackendErrorMessage(updated, "Could not make move."));
       if (!Array.isArray(updated?.board)) throw new Error("The game server returned an invalid session.");
       setSession(updated);
-      setBoard(updated.board);
+      updateBoard(updated);
       setTimerKey((previous) => previous + 1);
       if (updated.winner != null) {
         gameOverRef.current = true;
@@ -263,11 +278,13 @@ const OfflineGamePage = () => {
   const handleReplay = () => {
     clearTimeout(highlightTimerRef.current);
     clearTimeout(reviewTimerRef.current);
+    clearTimeout(drawTransitionTimerRef.current);
     createRequestRef.current = null;
     gameOverRef.current = false;
     movePendingRef.current = false;
     botSpecialPendingRef.current = false;
     lastBotMoveKeyRef.current = null;
+    boardSizeRef.current = 0;
     setSession(null);
     setBoard([]);
     setSelectedMoveType("NORMAL");
@@ -281,13 +298,14 @@ const OfflineGamePage = () => {
     setBotMoveHighlight(null);
     setReviewingBotMove(false);
     setMovePending(false);
+    setDrawTransition(false);
     setTimerKey((previous) => previous + 1);
     setReplayKey((previous) => previous + 1);
   };
 
   if (!validSetup) return <Navigate to="/offlinePage" replace />;
   if (authenticationRequired) return <Navigate to="/signin" replace state={{ loginRequired: true }} />;
-  const disabled = Boolean(!session || gameWinner || movePending || session.botThinking || session.botError || pollError || reviewingBotMove);
+  const disabled = Boolean(!session || gameWinner || movePending || session.botThinking || session.botError || pollError || reviewingBotMove || drawTransition);
   const botCoordinate = botMove && getBoardCoordinate(botMove.x, botMove.y);
   const botMoveMessage = botMove
     ? `${player2} played ${String(botMove.moveType || "NORMAL").replaceAll("_", " ")}${botMove.patternType && botMove.patternType !== "NONE" ? ` (${botMove.patternType.replaceAll("_", " ")})` : ""}${botCoordinate ? ` at ${botCoordinate}` : ""}${botMove.symbol ? ` (${botMove.symbol})` : ""}.`
@@ -358,17 +376,24 @@ const OfflineGamePage = () => {
               </div>
               {botStatus && <p role="status" className={`${!session.botError && !pollError ? "hidden lg:block" : ""} rounded-xl bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100`}>{botStatus}</p>}
               {reviewingBotMove && !gameWinner && !session.botThinking && <p role="status" className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Take a moment to review the bot&apos;s special move. Your timer is paused.</p>}
-              {movePending && <p role="status" className="text-sm text-slate-600 dark:text-slate-400">Submitting move...</p>}
+              {/* {movePending && <p role="status" className="text-sm text-slate-600 dark:text-slate-400">Submitting move...</p>} */}
               <div className="mx-auto w-full max-w-[600px] lg:max-w-[min(600px,max(260px,calc(100dvh-275px)))]">
                 <div className="mb-2 lg:hidden">
                   <MobilePlayerRow name={player1} symbol={displayedSymbols?.player1} points={session.player1Points}
                     color={player1Color} active={!gameWinner && session.currentPlayer === p1Name} previewTwist={previewTwist} />
                 </div>
-                <GamePlayingBoard board={board} makeMove={makeMove} currentPlayer={session.currentPlayer}
-                  threePatterns={session.threePatterns} winPattern={session.winPattern}
-                  player1={player1} player2={player2} localName={player1LocalName}
-                  player1Color={player1Color} player2Color={player2Color} disabled={disabled}
-                  highlightDuration={player2 === "tictacbot" ? 1400 : 500} botMoveHighlight={botMoveHighlight} showCoordinates />
+                {drawTransition && !gameWinner ? (
+                  <div role="status" className="flex aspect-square flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 text-center dark:border-slate-700 dark:bg-slate-900">
+                    <span aria-hidden="true" className="h-10 w-10 rounded-full border-4 border-indigo-200 border-t-indigo-600 motion-safe:animate-spin dark:border-indigo-900 dark:border-t-indigo-400" />
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">Match draw! Starting a bigger board...</p>
+                  </div>
+                ) : (
+                  <GamePlayingBoard board={board} makeMove={makeMove} currentPlayer={session.currentPlayer}
+                    threePatterns={session.threePatterns} winPattern={session.winPattern}
+                    player1={player1} player2={player2} localName={player1LocalName}
+                    player1Color={player1Color} player2Color={player2Color} disabled={disabled}
+                    highlightDuration={player2 === "tictacbot" ? 1400 : 500} botMoveHighlight={botMoveHighlight} showCoordinates />
+                )}
                 <div className="mt-2 lg:hidden">
                   <MobilePlayerRow name={player2} symbol={displayedSymbols?.player2} points={session.player2Points}
                     color={player2Color} active={!gameWinner && session.currentPlayer === p2Name} previewTwist={previewTwist} />

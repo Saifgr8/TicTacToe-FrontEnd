@@ -1,5 +1,6 @@
-import { useEffect, useId, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useId, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   ArrowDown,
   ArrowRight,
@@ -14,6 +15,8 @@ import Footer from "../Ui/Footer";
 import MatchMoves from "../Ui/MatchMoves";
 import MatchRules from "../Ui/MatchRules";
 import { GenerateRandomItem } from "../auth/GenerateRandomItem";
+import { hasAuthSession } from "../auth/authSession";
+import { checkAuthentication } from "../../api/axios/checkAuthentication";
 
 const onlineMatchRules = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const offlineMatchRules = [0, 2, 3, 6, 7, 9];
@@ -47,6 +50,56 @@ const RuleDisclosure = ({ title, mode, children }) => {
 
 const Homepage = () => {
   const [items, setItems] = useState([]);
+  const [checkingAuth, setCheckingAuth] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
+  const authRequestRef = useRef(null);
+  const redirectTimerRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => () => {
+    authRequestRef.current?.abort();
+    clearInterval(redirectTimerRef.current);
+  }, []);
+
+  const startOfflineMatch = async (mode) => {
+    if (authRequestRef.current) return;
+    const controller = new AbortController();
+    authRequestRef.current = controller;
+    setCheckingAuth(true);
+    setAuthError("");
+    try {
+      const authenticated = await checkAuthentication(localStorage.getItem("token"), controller.signal);
+      if (controller.signal.aborted) return;
+      if (!authenticated || !hasAuthSession(localStorage)) {
+        setRedirectCountdown(3);
+        let remaining = 3;
+        redirectTimerRef.current = setInterval(() => {
+          remaining -= 1;
+          if (remaining === 0) {
+            clearInterval(redirectTimerRef.current);
+            redirectTimerRef.current = null;
+            setRedirectCountdown(null);
+            navigate("/signin", { state: { loginRequired: true } });
+            return;
+          }
+          setRedirectCountdown(remaining);
+        }, 1000);
+        return;
+      }
+      localStorage.setItem("mode", mode);
+      navigate("/offlinePage");
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setAuthError(error.message || "Could not check authentication. Please try again.");
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        authRequestRef.current = null;
+        setCheckingAuth(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -172,23 +225,28 @@ const Homepage = () => {
                   </div>
                 </div>
                 <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                  <Link
-                    onClick={() => localStorage.setItem("mode", "offline1v1")}
-                    to="/offlinePage"
-                    className="group flex min-h-14 items-center justify-between gap-3 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  <button
+                    type="button"
+                    onClick={() => startOfflineMatch("offline1v1")}
+                    disabled={checkingAuth || redirectCountdown !== null}
+                    className="group flex min-h-14 items-center justify-between gap-3 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-wait disabled:opacity-60"
                   >
                     <span className="flex items-center gap-2"><Users aria-hidden="true" className="h-4 w-4" /> Play against person</span>
                     <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                  <Link
-                    onClick={() => localStorage.setItem("mode", "offlinebot")}
-                    to="/offlinePage"
-                    className="group flex min-h-14 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-indigo-500 dark:hover:bg-slate-700"
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startOfflineMatch("offlinebot")}
+                    disabled={checkingAuth || redirectCountdown !== null}
+                    className="group flex min-h-14 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-wait disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-indigo-500 dark:hover:bg-slate-700"
                   >
                     <span className="flex items-center gap-2"><Bot aria-hidden="true" className="h-4 w-4" /> Play against bot</span>
                     <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
+                  </button>
                 </div>
+                {checkingAuth && <p role="status" className="mt-3 text-sm text-slate-600 dark:text-slate-400">Checking your session...</p>}
+                {redirectCountdown !== null && <p role="status" aria-live="assertive" className="mt-3 text-sm text-orange-400 dark:text-orange-600">Please sign in. Redirecting in {redirectCountdown}...</p>}
+                {authError && <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-400">{authError}</p>}
                 <p className="mb-2 mt-8 text-xs font-bold uppercase tracking-wider text-slate-400">Learn the game</p>
                 <RuleDisclosure title="Match Rules" mode="Offline">
                   {(close) => <MatchRules valid={offlineMatchRules} timeoutForfeit setRulesRead={close} />}
